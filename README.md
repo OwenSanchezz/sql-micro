@@ -1,6 +1,6 @@
-# SQL Paso a Paso
+# CodeQuet SQL · Paso a Paso
 
-PWA en español para aprender SQL desde cero con seis micro-lecciones. Usa SQLite en memoria y guarda progreso, XP y racha en el dispositivo.
+PWA en español para aprender SQL desde cero con siete unidades y 28 micro-lecciones. Usa SQLite en memoria y guarda progreso, XP y racha en el dispositivo. Integra el personaje Quet y la animación de entrada de AppAprendizaje.
 
 ## Probar en local
 
