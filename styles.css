@@ -22,3 +22,29 @@
 .nav-tab small{font-size:10px;letter-spacing:.01em}
 .nav-tab.active{background:linear-gradient(180deg,#225274,#1a3e5c);color:#8ed6ff;box-shadow:0 2px 9px #06111d77,inset 0 0 0 1px #6fbbec36}
 @media(min-width:620px){.bottom-nav{left:50%;right:auto;bottom:14px;width:min(calc(100% - 32px),460px);border-radius:27px}}
+
+/* Duolingo-like learning route: animated CodeQuet circles connected as a trail. */
+.lesson-list{position:relative;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(2,96px);column-gap:14px;row-gap:2px;margin:12px 4px 8px;padding:8px 0}
+.lesson-list::before{content:"";position:absolute;z-index:0;left:50%;top:42px;bottom:42px;width:4px;transform:translateX(-50%);border-radius:99px;background:repeating-linear-gradient(to bottom,#3e6684 0 9px,transparent 9px 17px);opacity:.7}
+.path-node{position:relative;z-index:1;display:grid;grid-template-columns:58px minmax(0,1fr);align-items:center;justify-self:center;gap:9px;width:min(100%,210px);min-height:76px;padding:7px;border:0;background:transparent;color:var(--text);text-align:left;box-shadow:none;overflow:visible}
+.path-node.path-left{grid-column:1;transform:translateX(9px)}
+.path-node.path-right{grid-column:2;transform:translateX(-9px)}
+.path-node:nth-child(1){grid-row:1}.path-node:nth-child(2){grid-row:1;margin-top:36px}.path-node:nth-child(3){grid-row:2}.path-node:nth-child(4){grid-row:2;margin-top:36px}
+.path-node:not([disabled]):active{transform:translateY(2px) scale(.98);box-shadow:none}
+.path-node .lesson-icon{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#284b67,#1a344c);border:3px solid #527796;color:#a5c3d9;box-shadow:0 5px 0 #0c1a28,0 8px 15px #06111c99;transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease}
+.path-node .lesson-icon svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.path-node.is-current .lesson-icon{background:linear-gradient(145deg,#48baff,#1681df);border-color:#a7e4ff;color:#fff;animation:path-bob 1.8s ease-in-out infinite;box-shadow:0 6px 0 #0d5595,0 10px 24px #198fe566,0 0 0 7px #4bb7ff20}
+.path-node.is-current .lesson-copy{color:#e7f7ff}
+.path-node.is-done .lesson-icon{background:linear-gradient(145deg,#47c9a0,#1b987b);border-color:#a5f3d8;color:#fff;box-shadow:0 5px 0 #176a58,0 8px 17px #0b201b88}
+.path-node.is-locked{opacity:.5}
+.path-node.is-locked .lesson-icon{filter:saturate(.55)}
+.path-node .lesson-copy{display:grid;gap:3px;min-width:0}
+.path-node .lesson-title{font-size:12px;line-height:1.15}
+.path-node .lesson-subtitle{font-size:10px;line-height:1.2;margin:0}
+.path-node .lesson-progress{position:absolute;left:17px;bottom:3px;width:40px;height:4px;margin:0;background:#102233}
+.path-node .lesson-progress span{border-radius:9px}
+.unit-section{padding:9px 0 12px}
+.unit-heading{margin-bottom:4px}
+@keyframes path-bob{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-5px) scale(1.045)}}
+@media(max-width:370px){.lesson-list{column-gap:4px}.path-node{grid-template-columns:50px minmax(0,1fr);gap:6px;padding:4px}.path-node .lesson-icon{width:50px;height:50px}.path-node .lesson-title{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.path-node.is-current .lesson-icon{animation:none}}
