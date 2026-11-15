@@ -202,14 +202,23 @@ function startLesson(index,practice=false) {
 function showLessonEntry({first=false,practice=false}={}) {
   const overlay = document.createElement('div');
   overlay.className = first?'splash-screen intro-overlay':'intro-overlay';
-  overlay.innerHTML = first?`<video class="intro-video intro-video-full" playsinline autoplay muted poster="./assets/codequet/lesson-entry-poster.jpg"><source src="./assets/codequet/lesson-entry.mp4" type="video/mp4"></video>`:`<div class="lesson-intro-art"><img src="./assets/codequet/quet-banner.png" alt="Quet"><span>${practice?'¡Practiquemos de nuevo!':'¡Vamos con todo!'}</span></div><div class="intro-video-wrap"><video class="intro-video" playsinline autoplay ${audioUnlocked?'':'muted'} poster="./assets/codequet/lesson-entry-poster.jpg"><source src="./assets/codequet/lesson-entry.mp4" type="video/mp4"></video></div><div class="intro-controls"><strong>¡Hola, soy Quet!</strong><span>${esc(lessons[lessonIndex].title)} · Vamos a aprender juntos.</span><button class="intro-sound">${audioUnlocked?'🔊 Sonido activado':'🔊 Activar sonido'}</button><button class="intro-skip">Empezar</button></div>`;
+  overlay.innerHTML = first?`<video class="intro-video intro-video-full" playsinline autoplay poster="./assets/codequet/lesson-entry-poster.jpg"><source src="./assets/codequet/lesson-entry.mp4" type="video/mp4"></video>`:`<div class="lesson-intro-art"><img src="./assets/codequet/quet-banner.png" alt="Quet"><span>${practice?'¡Practiquemos de nuevo!':'¡Vamos con todo!'}</span></div><div class="intro-video-wrap"><video class="intro-video" playsinline autoplay ${audioUnlocked?'':'muted'} poster="./assets/codequet/lesson-entry-poster.jpg"><source src="./assets/codequet/lesson-entry.mp4" type="video/mp4"></video></div><div class="intro-controls"><strong>¡Hola, soy Quet!</strong><span>${esc(lessons[lessonIndex].title)} · Vamos a aprender juntos.</span><button class="intro-sound">${audioUnlocked?'🔊 Sonido activado':'🔊 Activar sonido'}</button><button class="intro-skip">Empezar</button></div>`;
   document.body.append(overlay);
   const close = () => {overlay.classList.add('intro-exit');setTimeout(()=>overlay.remove(),320);if(first){saved.introSeen=true;persist();}};
   const video = overlay.querySelector('video');
   video.addEventListener('ended',()=>{if(first)close();},{once:true});
-  video.play().catch(()=>{video.muted=true;video.play().catch(()=>{});});
+  if (first) {
+    // The lesson-card tap is the user's gesture, so browsers may start the clip with audio.
+    audioUnlocked = true;
+    video.muted = false;
+    video.volume = 1;
+  }
+  video.play().catch(()=>{
+    video.muted=true;
+    video.play().catch(()=>{});
+  });
   overlay.querySelector('.intro-sound')?.addEventListener('click',()=>{audioUnlocked=true;video.muted=false;video.play().catch(()=>{});overlay.querySelector('.intro-sound').textContent='🔊 Sonido activado';playSfx('open');});
-  overlay.querySelector('.intro-skip').addEventListener('click',()=>{audioUnlocked=true;close();});
+  overlay.querySelector('.intro-skip')?.addEventListener('click',()=>{audioUnlocked=true;close();});
 }
 function updateTopbar() {
   topbar.hidden=false;

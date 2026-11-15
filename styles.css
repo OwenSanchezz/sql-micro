@@ -9,5 +9,5 @@
 .splash-screen>img{display:block;width:100%;height:100%;max-width:560px;max-height:100dvh;object-fit:contain;border-radius:0;box-shadow:none}
 .splash-screen[hidden]{display:none}
 .splash-exit{opacity:0;transition:opacity .32s ease;pointer-events:none}
-.intro-overlay.splash-screen{padding:0;background:#2d8ed3}
-.intro-overlay.splash-screen .intro-video-full{position:absolute;inset:0;width:100%;height:100%;max-width:560px;margin:auto;object-fit:contain;opacity:1}
+.intro-overlay.splash-screen{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;min-height:0;max-width:none;margin:0;padding:0;display:block;overflow:hidden;background:#000;z-index:40}
+.intro-overlay.splash-screen .intro-video-full{position:absolute;inset:0;display:block;width:100%;height:100%;max-width:none;max-height:none;margin:0;object-fit:cover;object-position:center;background:#000;opacity:1}
