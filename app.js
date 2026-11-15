@@ -133,7 +133,6 @@ let feedback = '';
 let userResult = null;
 let challengeState = '';
 let currentTab = 'aprender';
-let practiceUnitFilter = null;
 let lessonOriginTab = 'aprender';
 let examUnit = 0;
 let examAnswers = [];
@@ -223,18 +222,27 @@ function renderSplash() {
 
 function renderPractice() {
   mode='practice';topbar.hidden=true;renderBottomNav('practicar');
-  const visibleUnits=units.map((unit,unitIndex)=>({unit,unitIndex})).filter(({unitIndex})=>practiceUnitFilter===null||practiceUnitFilter===unitIndex);
-  const practiceGroups=visibleUnits.map(({unit,unitIndex})=>{
+  const practiceGroups=units.map((unit,unitIndex)=>{
     const unitLessons=lessons.map((lesson,index)=>({lesson,index})).filter(({lesson})=>lesson.unit===unitIndex);
     const unitCompleted=unitLessons.every(({lesson})=>isComplete(lesson.id));
     const examPassed=courseProgress().exams.some(exam=>exam.unit===unitIndex&&exam.passed);
-    return `<section class="unit-section practice-unit" id="practice-unit-${unitIndex}"><div class="unit-heading"><span class="unit-mark">${esc(unit.icon)}</span><span><span class="unit-label">Unidad ${unitIndex+1} · ${unitLessons.filter(({lesson})=>isComplete(lesson.id)).length}/${unitLessons.length} ejercicios</span><strong>${esc(unit.title)}</strong><small>${esc(unit.subtitle)}</small></span></div><div class="practice-list">${unitLessons.map(({lesson,index})=>{const done=isComplete(lesson.id);return `<button class="lesson-card" data-practice="${index}"><span class="lesson-icon">${done?'✓':esc(lesson.icon)}</span><span><span class="lesson-title">${esc(lesson.title)}</span><span class="lesson-subtitle">${esc(lesson.subtitle)}</span></span><span class="lesson-state">${done?'↻':'›'}</span></button>`;}).join('')}</div><button class="unit-exam ${unitCompleted?'':'locked'}" data-exam="${unitIndex}" ${unitCompleted?'':'disabled'}><span class="exam-quet"><img src="./assets/codequet/quet-head.jpg" alt="Quet"></span><span><small>CODEQUET · ${examPassed?'APROBADO':'EXAMEN DE UNIDAD'}</small><strong>${examPassed?'Repetir examen':'Reto de unidad · 10 preguntas'}</strong></span><b>${examPassed?'✓':unitCompleted?'›':'🔒'}</b></button></section>`;
+    const pathNodes=unitLessons.map(({lesson,index})=>{
+      const unlocked=index===0||isComplete(lessons[index-1].id),done=isComplete(lesson.id);
+      const icon=done?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>':unlocked?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>':'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>';
+      return `<button class="lesson-card path-node ${done?'is-done':unlocked?'is-current':'is-locked'} ${index%2?'path-right':'path-left'}" data-practice="${index}" ${unlocked?'':'disabled'} aria-label="${esc(lesson.title)}${done?' · completada':unlocked?' · continuar':' · bloqueada'}"><span class="lesson-icon">${icon}</span><span class="lesson-copy"><span class="lesson-title">${esc(lesson.title)}</span><span class="lesson-subtitle">${esc(lesson.subtitle)}</span></span><span class="lesson-progress"><span style="width:${done?'100':'0'}%"></span></span></button>`;
+    }).join('');
+    return `<section class="unit-section practice-unit"><div class="unit-heading"><span class="unit-mark">${esc(unit.icon)}</span><span><span class="unit-label">Unidad ${unitIndex+1} · ${unitLessons.filter(({lesson})=>isComplete(lesson.id)).length}/${unitLessons.length} ejercicios</span><strong>${esc(unit.title)}</strong><small>${esc(unit.subtitle)}</small></span></div><div class="lesson-list">${pathNodes}</div><button class="unit-exam ${unitCompleted?'':'locked'}" data-exam="${unitIndex}" ${unitCompleted?'':'disabled'}><span class="exam-quet"><img src="./assets/codequet/quet-head.jpg" alt="Quet"></span><span><small>CODEQUET · ${examPassed?'APROBADO':'EXAMEN DE UNIDAD'}</small><strong>${examPassed?'Repetir examen':'Reto de unidad · 10 preguntas'}</strong></span><b>${examPassed?'✓':unitCompleted?'›':'🔒'}</b></button></section>`;
   }).join('');
-  screen.innerHTML=`<div class="page-head"><div class="brand"><img src="./assets/codequet/quet-head.jpg" alt=""> CODEQUET</div><span class="eyebrow">PRÁCTICA · ${esc(course.name)}</span><h1>Practica a tu ritmo.</h1><p>Aquí están los ejercicios y retos de cada unidad. Elige uno para empezar.</p></div>${course.id==='sql'?`<section class="practice-card"><div class="practice-quet"><img src="./assets/codequet/quet-banner.png" alt="Quet listo para practicar"></div><div><span class="eyebrow">SQL Playground</span><h2>Prueba una consulta</h2><p>Escribe SQL sobre películas, directores, productos y categorías.</p><button class="primary" id="open-playground">Abrir Playground</button></div></section>`:''}<div class="practice-filter"><button class="secondary" id="show-all-practice" ${practiceUnitFilter===null?'disabled':''}>${practiceUnitFilter===null?'Todas las unidades':'← Todas las unidades'}</button></div><div class="practice-units">${practiceGroups}</div>`;
+  screen.innerHTML=`<div class="page-head"><div class="brand"><img src="./assets/codequet/quet-head.jpg" alt=""> CODEQUET</div><span class="eyebrow">PRÁCTICA · ${esc(course.name)}</span><h1>Tu camino de aprendizaje.</h1><p>Avanza por las unidades. Toca el círculo disponible para entrar a una lección.</p></div>${course.id==='sql'?`<section class="practice-card"><div class="practice-quet"><img src="./assets/codequet/quet-banner.png" alt="Quet listo para practicar"></div><div><span class="eyebrow">SQL Playground</span><h2>Prueba una consulta</h2><p>Escribe SQL sobre películas, directores, productos y categorías.</p><button class="primary" id="open-playground">Abrir Playground</button></div></section>`:''}<div class="practice-units">${practiceGroups}</div>`;
+  if(course.resources?.length){
+    const resources=document.createElement('details');
+    resources.className='course-resources';
+    resources.innerHTML=`<summary>Documentación oficial para profundizar</summary><div>${course.resources.map(resource=>`<a href="${esc(resource.url)}" target="_blank" rel="noopener noreferrer">${esc(resource.label)} ↗</a>`).join('')}</div>`;
+    screen.querySelector('.practice-units').after(resources);
+  }
   document.querySelector('#open-playground')?.addEventListener('click',()=>{playSfx();startPracticeEditor();});
   screen.querySelectorAll('[data-practice]').forEach(button=>button.onclick=()=>{playSfx();startLesson(Number(button.dataset.practice),true);});
   screen.querySelectorAll('[data-exam]').forEach(button=>button.onclick=()=>{lessonOriginTab='practicar';startExam(Number(button.dataset.exam));});
-  screen.querySelector('#show-all-practice')?.addEventListener('click',()=>{practiceUnitFilter=null;renderPractice();});
 }
 function startPracticeEditor(){if(course.id!=='sql'){const available=lessons.findIndex(l=>!isComplete(l.id));startLesson(Math.max(0,available),true);return;}mode='playground';topbar.hidden=false;progressFill.style.width='100%';heartCount.textContent='∞';screen.innerHTML=`<span class="eyebrow">PLAYGROUND · SQL</span><h1>Consulta lo que quieras.</h1><p>Prueba SQL con las tablas del curso.</p><label class="editor-label" for="sql-input">Tu consulta</label><textarea id="sql-input" class="sql-editor">SELECT titulo, anio FROM peliculas ORDER BY anio DESC LIMIT 5;</textarea><div id="playground-result"></div><div class="bottom-action"><button class="primary" id="run-query">Ejecutar consulta</button><button class="secondary" id="playground-back">Volver a practicar</button></div>`;document.querySelector('#run-query').onclick=()=>{try{document.querySelector('#playground-result').innerHTML=tableHtml(runQuery(document.querySelector('#sql-input').value));playSfx('success');}catch(error){document.querySelector('#playground-result').innerHTML=`<p class="error-message">${esc(error.message)}</p>`;}};document.querySelector('#playground-back').onclick=renderPractice;}
 function renderGames(){mode='games';topbar.hidden=true;renderBottomNav('juegos');const all=getMixedReviewQuestions();const today=(new Date().getDate()+new Date().getMonth())%all.length;const q=all[today];screen.innerHTML=`<div class="page-head"><div class="brand"><img src="./assets/codequet/quet-head.jpg" alt=""> CODEQUET</div><span class="eyebrow">MODO JUEGOS · TODAS LAS RUTAS</span><h1>Juega con código.</h1><p>Un reto rápido de los cursos que estás aprendiendo.</p></div><section class="step-card"><img class="game-quet" src="./assets/codequet/quet-banner.png" alt="Quet te reta"><span class="eyebrow">RETO RELÁMPAGO · ${esc(q.courseName)} · ${esc(q.lesson)}</span><h2>${esc(q.question)}</h2><div class="option-list">${q.options.map((x,i)=>`<button class="option" data-game="${i}">${esc(x)}</button>`).join('')}</div><p id="game-feedback" class="feedback"></p><button class="quet-help-inline" id="game-next">Otro reto</button></section>`;screen.querySelectorAll('[data-game]').forEach(button=>button.onclick=()=>{const ok=Number(button.dataset.game)===q.answer;document.querySelector('#game-feedback').textContent=ok?'¡Correcto! +5 XP':`Pista: vuelve a pensar en ${q.lesson}.`;if(ok){saved.xp+=5;persist();playSfx('success');}else playSfx();});screen.querySelector('#game-next').onclick=renderGames;}
@@ -242,22 +250,9 @@ function renderProfile(){mode='profile';topbar.hidden=true;renderBottomNav('perf
 
 function renderHome() {
   mode = 'home'; topbar.hidden = true; renderBottomNav('aprender');
-  const topicCards=units.map((unit,unitIndex)=>{
-    const unitLessons=lessons.filter(lesson=>lesson.unit===unitIndex);
-    const completed=unitLessons.filter(lesson=>isComplete(lesson.id)).length;
-    const topics=unitLessons.map(lesson=>`<li><strong>${esc(lesson.title)}</strong><span>${esc(lesson.subtitle)}</span></li>`).join('');
-    return `<article class="topic-card"><div class="unit-heading"><span class="unit-mark">${esc(unit.icon)}</span><span><span class="unit-label">Unidad ${unitIndex+1} · ${completed}/${unitLessons.length} aprendidas</span><strong>${esc(unit.title)}</strong><small>${esc(unit.subtitle)}</small></span></div><details class="topic-details"><summary>Qué vas a entender <span>${unitLessons.length} temas</span></summary><ul>${topics}</ul></details><button class="primary topic-practice" data-topic-practice="${unitIndex}">Ir a practicar esta unidad <span aria-hidden="true">→</span></button></article>`;
-  }).join('');
-  screen.innerHTML = `<div class="home-head"><button class="menu-button" id="menu-button" aria-label="Abrir menú">☰</button><span class="brand"><img src="./assets/codequet/quet-head.jpg" alt=""> CODEQUET <i>· ${esc(course.name)}</i></span><div class="stats"><span class="stat streak">🔥 ${saved.streak}</span><span class="stat xp">✦ ${saved.xp} XP</span></div></div><section class="welcome-card"><div class="welcome-art"><img src="./assets/codequet/quet-banner.png" alt="Quet, tu guía para aprender"></div><div><span class="eyebrow">Tu aventura ${esc(course.name)}</span><h1>Inicio</h1><p>Explora los temas de ${units.length} unidades. Cuando quieras resolver ejercicios, los encontrarás en Practicar.</p></div></section>${renderCourseSections()}<div class="route-heading"><h2>Temas que aprenderás</h2><span>${courseProgress().completed.length} / ${lessons.length} ejercicios</span></div><div class="topic-list">${topicCards}</div>`;
-  if(course.resources?.length){
-    const resources=document.createElement('details');
-    resources.className='course-resources';
-    resources.innerHTML=`<summary>Documentación oficial para profundizar</summary><div>${course.resources.map(resource=>`<a href="${esc(resource.url)}" target="_blank" rel="noopener noreferrer">${esc(resource.label)} ↗</a>`).join('')}</div>`;
-    screen.querySelector('.career-track-block').after(resources);
-  }
+  screen.innerHTML = `<div class="home-head"><button class="menu-button" id="menu-button" aria-label="Abrir menú">☰</button><span class="brand"><img src="./assets/codequet/quet-head.jpg" alt=""> CODEQUET</span><div class="stats"><span class="stat streak">🔥 ${saved.streak}</span><span class="stat xp">✦ ${saved.xp} XP</span></div></div><div class="topic-home-intro"><span class="eyebrow">APRENDER · ELIGE TU RUTA</span><h1>¿Qué quieres aprender?</h1><p>Toca un tema para abrir sus unidades y empezar a practicar.</p></div>${renderCourseSections()}`;
   document.querySelector('#menu-button').onclick=renderProfile;
-  screen.querySelectorAll('[data-course]').forEach(button=>button.onclick=()=>{setCourse(button.dataset.course);persist();renderHome();});
-  screen.querySelectorAll('[data-topic-practice]').forEach(button=>button.addEventListener('click',()=>{practiceUnitFilter=Number(button.dataset.topicPractice);renderPractice();requestAnimationFrame(()=>screen.querySelector(`#practice-unit-${practiceUnitFilter}`)?.scrollIntoView({behavior:'smooth',block:'start'}));}));
+  screen.querySelectorAll('[data-course]').forEach(button=>button.onclick=()=>{setCourse(button.dataset.course);persist();renderPractice();});
 }
 function startLesson(index,practice=false) {
   lessonOriginTab=practice?'practicar':'aprender';
@@ -266,26 +261,20 @@ function startLesson(index,practice=false) {
   mode='lesson'; renderStep();
   showLessonEntry({first:!saved.introSeen,practice});
 }
-function showLessonEntry({first=false,practice=false}={}) {
-  const overlay = document.createElement('div');
-  overlay.className = first?'splash-screen intro-overlay':'intro-overlay';
-  overlay.innerHTML = first?`<video class="intro-video intro-video-full" playsinline autoplay poster="./assets/codequet/lesson-entry-poster.jpg"><source src="./assets/codequet/lesson-entry.mp4" type="video/mp4"></video>`:`<div class="lesson-intro-art"><img src="./assets/codequet/quet-banner.png" alt="Quet"><span>${practice?'¡Practiquemos de nuevo!':'¡Vamos con todo!'}</span></div><div class="intro-video-wrap"><video class="intro-video" playsinline autoplay ${audioUnlocked?'':'muted'} poster="./assets/codequet/lesson-entry-poster.jpg"><source src="./assets/codequet/lesson-entry.mp4" type="video/mp4"></video></div><div class="intro-controls"><strong>¡Hola, soy Quet!</strong><span>${esc(lessons[lessonIndex].title)} · Vamos a aprender juntos.</span><button class="intro-sound">${audioUnlocked?'🔊 Sonido activado':'🔊 Activar sonido'}</button><button class="intro-skip">Empezar</button></div>`;
+function showLessonEntry() {
+  const overlay=document.createElement('div');
+  overlay.className='intro-overlay lesson-entry-overlay';
+  overlay.setAttribute('aria-label',`Animación de entrada: ${lessons[lessonIndex].title}`);
+  overlay.innerHTML=`<video class="lesson-entry-video" playsinline autoplay preload="auto" poster="./assets/codequet/lesson-entry-poster.jpg"><source src="./assets/codequet/lesson-entry.mp4" type="video/mp4"></video>`;
   document.body.append(overlay);
-  const close = () => {overlay.classList.add('intro-exit');setTimeout(()=>overlay.remove(),320);if(first){saved.introSeen=true;persist();}};
-  const video = overlay.querySelector('video');
-  video.addEventListener('ended',()=>{if(first)close();},{once:true});
-  if (first) {
-    // The lesson-card tap is the user's gesture, so browsers may start the clip with audio.
-    audioUnlocked = true;
-    video.muted = false;
-    video.volume = 1;
-  }
-  video.play().catch(()=>{
-    video.muted=true;
-    video.play().catch(()=>{});
-  });
-  overlay.querySelector('.intro-sound')?.addEventListener('click',()=>{audioUnlocked=true;video.muted=false;video.play().catch(()=>{});overlay.querySelector('.intro-sound').textContent='🔊 Sonido activado';playSfx('open');});
-  overlay.querySelector('.intro-skip')?.addEventListener('click',()=>{audioUnlocked=true;close();});
+  const close=()=>{if(!overlay.isConnected)return;overlay.classList.add('intro-exit');setTimeout(()=>overlay.remove(),320);saved.introSeen=true;persist();};
+  const video=overlay.querySelector('video');
+  audioUnlocked=true;
+  video.muted=false;
+  video.volume=1;
+  video.addEventListener('ended',close,{once:true});
+  video.addEventListener('error',close,{once:true});
+  video.play().catch(()=>{video.muted=false;video.play().catch(()=>close());});
 }
 function updateTopbar() {
   topbar.hidden=false;
