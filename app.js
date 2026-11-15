@@ -1,6 +1,6 @@
-import { lessons, units } from './lessons.js';
+import { courses, getActiveCourse, getCourseLessons, getCourseUnits, selectCourse } from './lessons.js';
 
-const STORE_KEY = 'codequet-aprendizaje-v2';
+const STORE_KEY = 'codequet-aprendizaje-v3';
 const screen = document.querySelector('#screen');
 const topbar = document.querySelector('#topbar');
 const bottomNav = document.querySelector('#bottom-nav');
@@ -31,22 +31,34 @@ const DIRECTORES = [
 ];
 
 function safeLoad() {
-  const fallback = { completed: [], exams: [], xp: 0, streak: 0, lastDay: null, helpCount: 0 };
+  const fallback = { activeCourse: 'sql', progressByCourse: {}, xp: 0, streak: 0, lastDay: null, helpCount: 0 };
   try {
-    const saved = JSON.parse(localStorage.getItem(STORE_KEY) || localStorage.getItem('sql-paso-a-paso-v1') || 'null');
-    if (!saved || typeof saved !== 'object') return fallback;
+    const stored = JSON.parse(localStorage.getItem(STORE_KEY) || localStorage.getItem('sql-paso-a-paso-v1') || 'null');
+    if (!stored || typeof stored !== 'object') return fallback;
+    const legacyIds=['select','columns','where','order','logic','in-between','like','null','count','sum-avg','group','having','insert','update','delete','transactions','create','primary','foreign','constraints','relations','inner','left','multi-join','subquery','aliases','indexes','views'];
+    const legacyCompleted=Array.isArray(stored.completed)?stored.completed.map(id=>id.startsWith('sql-')?id:legacyIds.includes(id)?`sql-${({'in-between':'between','sum-avg':'sum-avg','multi-join':'multi-join'}[id]||id)}`:id):[];
+    const progressByCourse=stored.progressByCourse && typeof stored.progressByCourse==='object'?stored.progressByCourse:{sql:{completed:legacyCompleted,exams:Array.isArray(stored.exams)?stored.exams:[]}};
     return {
-      completed: Array.isArray(saved.completed) ? saved.completed.filter(id => lessons.some(l => l.id === id)) : [],
-      exams: Array.isArray(saved.exams) ? saved.exams : [],
-      xp: Number.isFinite(saved.xp) && saved.xp >= 0 ? saved.xp : 0,
-      streak: Number.isFinite(saved.streak) && saved.streak >= 0 ? saved.streak : 0,
-      lastDay: typeof saved.lastDay === 'string' ? saved.lastDay : null,
-      helpCount: Number.isFinite(saved.helpCount) ? saved.helpCount : 0,
+      activeCourse: courses.some(c=>c.id===stored.activeCourse)?stored.activeCourse:'sql',
+      progressByCourse:Object.fromEntries(courses.map(course=>{const progress=progressByCourse[course.id]||{};const ids=getCourseLessons(course.id).map(l=>l.id);return [course.id,{completed:Array.isArray(progress.completed)?progress.completed.filter(id=>ids.includes(id)):[],exams:Array.isArray(progress.exams)?progress.exams:[]}]})),
+      completed:legacyCompleted,
+      exams:Array.isArray(stored.exams)?stored.exams:[],
+      xp:Number.isFinite(stored.xp)&&stored.xp>=0?stored.xp:0,
+      streak:Number.isFinite(stored.streak)&&stored.streak>=0?stored.streak:0,
+      lastDay:typeof stored.lastDay==='string'?stored.lastDay:null,
+      helpCount:Number.isFinite(stored.helpCount)?stored.helpCount:0,
+      introSeen:!!stored.introSeen,
     };
   } catch { return fallback; }
 }
 let saved = safeLoad();
-function persist() { try { localStorage.setItem(STORE_KEY, JSON.stringify(saved)); } catch { /* El progreso sigue en memoria si el navegador bloquea el almacenamiento. */ } }
+selectCourse(saved.activeCourse);
+let course=getActiveCourse(), lessons=getCourseLessons(), units=getCourseUnits();
+function courseProgress(courseId=course.id){saved.progressByCourse[courseId] ||= {completed:[],exams:[]};return saved.progressByCourse[courseId];}
+function persist() { const progress=courseProgress();saved.completed=progress.completed;saved.exams=progress.exams;try { localStorage.setItem(STORE_KEY, JSON.stringify(saved)); } catch { /* El progreso sigue en memoria si el navegador bloquea el almacenamiento. */ } }
+function setCourse(id){selectCourse(id);course=getActiveCourse();lessons=getCourseLessons();units=getCourseUnits();saved.activeCourse=id;const progress=courseProgress(id);saved.completed=progress.completed;saved.exams=progress.exams;}
+function isComplete(id){return courseProgress().completed.includes(id)}
+function markComplete(id){const progress=courseProgress();if(!progress.completed.includes(id))progress.completed.push(id);saved.completed=progress.completed;}
 function esc(value) { return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
 function makeDatabase() {
   if (!SQLModule) throw new Error('El motor SQL todavía se está iniciando. Inténtalo de nuevo en un momento.');
@@ -110,9 +122,9 @@ let examQuestion = 0;
 let splashShown = false;
 let audioUnlocked = false;
 let audioContext;
-const examQuestions = units.map((_, unitIndex) => {
-  const questions = lessons.filter(lesson => lesson.unit === unitIndex).map(lesson => ({ question: lesson.steps[1].question, options: lesson.steps[1].options, answer: lesson.steps[1].answer }));
-  const extras = [
+const sqlExamQuestions = [0,1,2,3,4,5,6].map(unitIndex => {
+  const questions = getCourseLessons('sql').filter(lesson => lesson.unit === unitIndex).map(lesson => ({ question: lesson.steps[1].question, options: lesson.steps[1].options, answer: lesson.steps[1].answer }));
+    const extras = [
     [
       ['¿Qué palabra inicia una consulta de lectura?',['SELECT','INSERT','UPDATE'],0], ['¿Qué símbolo separa columnas?',['Coma','Punto y coma','Dos puntos'],0], ['¿Qué cláusula limita filas?',['LIMIT','SET','JOIN'],0], ['¿Qué hace ASC?',['Ordena ascendente','Borra filas','Agrupa datos'],0], ['¿Qué hace * en SELECT *?',['Selecciona todas las columnas','Multiplica filas','Crea una tabla'],0], ['¿Dónde se indica la tabla consultada?',['FROM','WHERE','ORDER'],0],
     ],
@@ -137,6 +149,16 @@ const examQuestions = units.map((_, unitIndex) => {
   ][unitIndex];
   return [...questions, ...extras.map(([question, options, answer]) => ({ question, options, answer }))];
 });
+function getExamQuestions(){
+  if(course.id==='sql')return sqlExamQuestions;
+  return units.map((unit,unitIndex)=>{
+    const bank=unit.lessons.map(lesson=>({question:lesson.steps[1].question,options:lesson.steps[1].options,answer:lesson.steps[1].answer}));
+    const other=lessons.filter(lesson=>lesson.unit!==unitIndex).map(lesson=>({question:lesson.steps[1].question,options:lesson.steps[1].options,answer:lesson.steps[1].answer}));
+    let cursor=(unitIndex*3)%Math.max(1,other.length);
+    while(bank.length<10&&other.length){bank.push(other[cursor%other.length]);cursor++;}
+    return bank;
+  });
+}
 
 function playSfx(kind='tap') {
   if (!audioUnlocked) return;
@@ -174,33 +196,34 @@ function renderSplash() {
 
 function renderPractice() {
   mode='practice';topbar.hidden=true;renderBottomNav('practicar');
-  screen.innerHTML=`<div class="page-head"><div class="brand"><img src="./assets/codequet/quet-head.jpg" alt=""> CODEQUET</div><span class="eyebrow">MODO LIBRE</span><h1>Practica a tu ritmo.</h1><p>Explora consultas y vuelve a las lecciones cuando quieras.</p></div><section class="practice-card"><div class="practice-quet"><img src="./assets/codequet/quet-banner.png" alt="Quet listo para practicar"></div><div><span class="eyebrow">SQL Playground</span><h2>Prueba una consulta</h2><p>Escribe SQL sobre películas, directores, productos y categorías.</p><button class="primary" id="open-playground">Abrir Playground</button></div></section><h2>Repaso guiado</h2><p>Elige una lección que ya completaste para volver a practicar.</p><div class="practice-list">${lessons.map((lesson,index)=>saved.completed.includes(lesson.id)?`<button class="lesson-card" data-practice="${index}"><span class="lesson-icon">${lesson.icon}</span><span><span class="lesson-title">${esc(lesson.title)}</span><span class="lesson-subtitle">${esc(lesson.subtitle)}</span></span><span class="lesson-state">↻</span></button>`:'').join('')||'<p class="hint">Completa tu primera lección y Quet preparará aquí los repasos.</p>'}</div>`;
-  screen.innerHTML=`<div class="page-head"><div class="brand"><img src="./assets/codequet/quet-head.jpg" alt=""> CODEQUET</div><span class="eyebrow">MODO LIBRE</span><h1>Practica a tu ritmo.</h1><p>Explora consultas y vuelve a las lecciones cuando quieras.</p></div><section class="practice-card"><div class="practice-quet"><img src="./assets/codequet/quet-banner.png" alt="Quet listo para practicar"></div><div><span class="eyebrow">SQL Playground</span><h2>Prueba una consulta</h2><p>Escribe SQL sobre películas, directores, productos y categorías.</p><button class="primary" id="open-playground">Abrir Playground</button></div></section><h2>Repaso guiado</h2><p>Elige una lección que ya completaste para volver a practicar.</p><div class="practice-list">${lessons.map((lesson,index)=>saved.completed.includes(lesson.id)?`<button class="lesson-card" data-practice="${index}"><span class="lesson-icon">${lesson.icon}</span><span><span class="lesson-title">${esc(lesson.title)}</span><span class="lesson-subtitle">${esc(lesson.subtitle)}</span></span><span class="lesson-state">↻</span></button>`:'').join('')||'<p class="hint">Completa tu primera lección y Quet preparará aquí los repasos.</p>'}</div>`;
+  screen.innerHTML=`<div class="page-head"><div class="brand"><img src="./assets/codequet/quet-head.jpg" alt=""> CODEQUET</div><span class="eyebrow">PRÁCTICA · ${esc(course.name)}</span><h1>Practica a tu ritmo.</h1><p>Elige un reto ya visto o juega con los conceptos de esta ruta.</p></div>${course.id==='sql'?`<section class="practice-card"><div class="practice-quet"><img src="./assets/codequet/quet-banner.png" alt="Quet listo para practicar"></div><div><span class="eyebrow">SQL Playground</span><h2>Prueba una consulta</h2><p>Escribe SQL sobre películas, directores, productos y categorías.</p><button class="primary" id="open-playground">Abrir Playground</button></div></section>`:`<section class="practice-card"><div class="practice-quet"><img src="./assets/codequet/quet-banner.png" alt="Quet listo para practicar"></div><div><span class="eyebrow">Laboratorio guiado · ${esc(course.name)}</span><h2>Prueba lo aprendido</h2><p>Escribe un ejemplo y compáralo con un reto paso a paso, con pistas de Quet.</p><button class="primary" id="open-playground">Abrir práctica</button></div></section>`}<h2>Repaso guiado</h2><p>Repite cualquier lección que ya completaste.</p><div class="practice-list">${lessons.map((lesson,index)=>isComplete(lesson.id)?`<button class="lesson-card" data-practice="${index}"><span class="lesson-icon">${lesson.icon}</span><span><span class="lesson-title">${esc(lesson.title)}</span><span class="lesson-subtitle">${esc(lesson.subtitle)}</span></span><span class="lesson-state">↻</span></button>`:'').join('')||'<p class="hint">Completa tu primera lección y Quet preparará aquí los repasos.</p>'}</div>`;
   document.querySelector('#open-playground').onclick=()=>{playSfx();startPracticeEditor();};
   screen.querySelectorAll('[data-practice]').forEach(button=>button.onclick=()=>{playSfx();startLesson(Number(button.dataset.practice),true);});
 }
-function startPracticeEditor(){mode='playground';topbar.hidden=false;progressFill.style.width='100%';heartCount.textContent='∞';screen.innerHTML=`<span class="eyebrow">PLAYGROUND · SQL</span><h1>Consulta lo que quieras.</h1><p>Prueba SQL con las tablas del curso.</p><label class="editor-label" for="sql-input">Tu consulta</label><textarea id="sql-input" class="sql-editor">SELECT titulo, anio FROM peliculas ORDER BY anio DESC LIMIT 5;</textarea><div id="playground-result"></div><div class="bottom-action"><button class="primary" id="run-query">Ejecutar consulta</button><button class="secondary" id="playground-back">Volver a practicar</button></div>`;document.querySelector('#run-query').onclick=()=>{try{document.querySelector('#playground-result').innerHTML=tableHtml(runQuery(document.querySelector('#sql-input').value));playSfx('success');}catch(error){document.querySelector('#playground-result').innerHTML=`<p class="error-message">${esc(error.message)}</p>`;}};document.querySelector('#playground-back').onclick=renderPractice;}
-function renderGames(){mode='games';topbar.hidden=true;renderBottomNav('juegos');screen.innerHTML=`<div class="page-head"><div class="brand"><img src="./assets/codequet/quet-head.jpg" alt=""> CODEQUET</div><span class="eyebrow">MODO JUEGOS</span><h1>Juega con SQL.</h1><p>Retos cortos de opción múltiple para entrenar la lógica.</p></div><section class="step-card"><img class="game-quet" src="./assets/codequet/quet-banner.png" alt="Quet te reta"><span class="eyebrow">RETO RELÁMPAGO</span><h2>¿Qué hace WHERE?</h2><div class="option-list">${['Ordena filas','Filtra filas','Crea una tabla'].map((x,i)=>`<button class="option" data-game="${i}">${x}</button>`).join('')}</div><p id="game-feedback" class="feedback"></p></section>`;screen.querySelectorAll('[data-game]').forEach(button=>button.onclick=()=>{const ok=button.dataset.game==='1';document.querySelector('#game-feedback').textContent=ok?'¡Correcto! WHERE filtra filas. +5 XP':'Prueba otra vez: WHERE aplica una condición a las filas.';if(ok){saved.xp+=5;persist();playSfx('success');}else playSfx();});}
-function renderProfile(){mode='profile';topbar.hidden=true;renderBottomNav('perfil');screen.innerHTML=`<div class="page-head"><div class="brand"><img src="./assets/codequet/quet-head.jpg" alt=""> CODEQUET</div><span class="eyebrow">TU PERFIL</span><h1>Tu aventura.</h1></div><section class="profile-card"><img src="./assets/codequet/quet-head.jpg" alt="Quet"><h2>Explorador SQL</h2><p>Quet está orgulloso de ti. Sigue avanzando a tu ritmo.</p><div class="summary-stats"><div class="summary-stat"><strong>${saved.xp}</strong><span>XP</span></div><div class="summary-stat"><strong>${saved.completed.length}/28</strong><span>lecciones</span></div><div class="summary-stat"><strong>${saved.exams.length}</strong><span>exámenes</span></div></div></section><h2>Elige un lenguaje</h2><p>Por ahora la ruta SQL ya está lista. Los demás lenguajes se activarán cuando tengan su curso listo.</p><div class="language-picker"><button class="language-choice selected"><span>🗄️</span><strong>SQL</strong><small>Disponible · 7 unidades</small></button>${[['Python','🐍'],['JavaScript','🟨'],['HTML y CSS','🌐'],['Java','☕']].map(([name,icon])=>`<button class="language-choice" disabled><span>${icon}</span><strong>${name}</strong><small>Próximamente</small></button>`).join('')}</div>`;}
+function startPracticeEditor(){if(course.id!=='sql'){const available=lessons.findIndex(l=>!isComplete(l.id));startLesson(Math.max(0,available),true);return;}mode='playground';topbar.hidden=false;progressFill.style.width='100%';heartCount.textContent='∞';screen.innerHTML=`<span class="eyebrow">PLAYGROUND · SQL</span><h1>Consulta lo que quieras.</h1><p>Prueba SQL con las tablas del curso.</p><label class="editor-label" for="sql-input">Tu consulta</label><textarea id="sql-input" class="sql-editor">SELECT titulo, anio FROM peliculas ORDER BY anio DESC LIMIT 5;</textarea><div id="playground-result"></div><div class="bottom-action"><button class="primary" id="run-query">Ejecutar consulta</button><button class="secondary" id="playground-back">Volver a practicar</button></div>`;document.querySelector('#run-query').onclick=()=>{try{document.querySelector('#playground-result').innerHTML=tableHtml(runQuery(document.querySelector('#sql-input').value));playSfx('success');}catch(error){document.querySelector('#playground-result').innerHTML=`<p class="error-message">${esc(error.message)}</p>`;}};document.querySelector('#playground-back').onclick=renderPractice;}
+function renderGames(){mode='games';topbar.hidden=true;renderBottomNav('juegos');const all=lessons.flatMap(l=>l.steps.filter(s=>s.type==='quiz').map(s=>({...s,lesson:l.title})));const today=(new Date().getDate()+new Date().getMonth())%all.length;const q=all[today];screen.innerHTML=`<div class="page-head"><div class="brand"><img src="./assets/codequet/quet-head.jpg" alt=""> CODEQUET</div><span class="eyebrow">MODO JUEGOS · ${esc(course.name)}</span><h1>Juega con código.</h1><p>Un reto rápido para recordar lo que aprendiste.</p></div><section class="step-card"><img class="game-quet" src="./assets/codequet/quet-banner.png" alt="Quet te reta"><span class="eyebrow">RETO RELÁMPAGO · ${esc(q.lesson)}</span><h2>${esc(q.question)}</h2><div class="option-list">${q.options.map((x,i)=>`<button class="option" data-game="${i}">${esc(x)}</button>`).join('')}</div><p id="game-feedback" class="feedback"></p><button class="quet-help-inline" id="game-next">Otro reto</button></section>`;screen.querySelectorAll('[data-game]').forEach(button=>button.onclick=()=>{const ok=Number(button.dataset.game)===q.answer;document.querySelector('#game-feedback').textContent=ok?'¡Correcto! +5 XP':`Pista: vuelve a pensar en ${q.lesson}.`;if(ok){saved.xp+=5;persist();playSfx('success');}else playSfx();});screen.querySelector('#game-next').onclick=renderGames;}
+function renderProfile(){mode='profile';topbar.hidden=true;renderBottomNav('perfil');screen.innerHTML=`<div class="page-head"><div class="brand"><img src="./assets/codequet/quet-head.jpg" alt=""> CODEQUET</div><span class="eyebrow">TU PERFIL</span><h1>Tu aventura.</h1></div><section class="profile-card"><img src="./assets/codequet/quet-head.jpg" alt="Quet"><h2>Explorador de código</h2><p>Quet guarda tu avance por separado en cada curso.</p><div class="summary-stats"><div class="summary-stat"><strong>${saved.xp}</strong><span>XP</span></div><div class="summary-stat"><strong>${Object.values(saved.progressByCourse).reduce((sum,p)=>sum+p.completed.length,0)}</strong><span>lecciones</span></div><div class="summary-stat"><strong>${Object.values(saved.progressByCourse).reduce((sum,p)=>sum+p.exams.filter(e=>e.passed).length,0)}</strong><span>exámenes</span></div></div></section><h2>Elige tu curso</h2><p>Cada ruta empieza por los fundamentos.</p><div class="language-picker">${courses.map(item=>`<button class="language-choice ${item.id===course.id?'selected':''}" data-course="${item.id}"><span class="course-mark">${esc(item.icon)}</span><strong>${esc(item.name)}</strong><small>${item.units.length} unidades · ${getCourseLessons(item.id).length} lecciones</small><small>${esc(item.description)}</small></button>`).join('')}</div><h2>Tu avance en ${esc(course.name)}</h2><div class="summary-stats"><div class="summary-stat"><strong>${courseProgress().completed.length}/${lessons.length}</strong><span>lecciones</span></div><div class="summary-stat"><strong>${courseProgress().exams.filter(e=>e.passed).length}</strong><span>exámenes aprobados</span></div></div>`;screen.querySelectorAll('[data-course]').forEach(button=>button.onclick=()=>{setCourse(button.dataset.course);persist();renderHome();});}
 
 function renderHome() {
   mode = 'home'; topbar.hidden = true; renderBottomNav('aprender');
   const grouped = units.map((unit, unitIndex) => {
     const unitCards = lessons.map((lesson,index)=>({lesson,index})).filter(item=>item.lesson.unit===unitIndex).map(({lesson,index})=>{
-      const unlocked = index===0 || saved.completed.includes(lessons[index-1].id), done=saved.completed.includes(lesson.id);
+      const unlocked = index===0 || isComplete(lessons[index-1].id), done=isComplete(lesson.id);
       return `<button class="lesson-card path-node ${done?'is-done':unlocked?'is-current':'is-locked'} ${index%2?'path-right':'path-left'}" data-lesson="${index}" ${unlocked?'':'disabled'} aria-label="${esc(lesson.title)}${done?' · completada':unlocked?' · continuar':' · bloqueada'}"><span class="lesson-icon">${done?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>':unlocked?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>':'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>'}</span><span class="lesson-copy"><span class="lesson-title">${esc(lesson.title)}</span><span class="lesson-subtitle">${esc(lesson.subtitle)}</span></span><span class="lesson-progress"><span style="width:${done?'100':'0'}%"></span></span></button>`;
     }).join('');
-    const unitCompleted=lessons.filter(l=>l.unit===unitIndex).every(l=>saved.completed.includes(l.id));
-    const examPassed=saved.exams.some(exam=>exam.unit===unitIndex&&exam.passed);
+    const unitCompleted=lessons.filter(l=>l.unit===unitIndex).every(l=>isComplete(l.id));
+    const examPassed=courseProgress().exams.some(exam=>exam.unit===unitIndex&&exam.passed);
     return `<section class="unit-section"><div class="unit-heading"><span class="unit-mark">${unit.icon}</span><span><span class="unit-label">Unidad ${unitIndex + 1}</span><strong>${esc(unit.title)}</strong><small>${esc(unit.subtitle)}</small></span></div><div class="lesson-list">${unitCards}</div><button class="unit-exam ${unitCompleted?'':'locked'}" data-exam="${unitIndex}" ${unitCompleted?'':'disabled'}><span class="exam-quet"><img src="./assets/codequet/quet-head.jpg" alt="Quet"></span><span><small>CODEQUET · ${examPassed?'APROBADO':'EXAMEN DE UNIDAD'}</small><strong>${examPassed?'Repetir examen':'Reto de unidad · 10 preguntas'}</strong></span><b>${examPassed?'✓':unitCompleted?'›':'🔒'}</b></button></section>`;
   }).join('');
-  screen.innerHTML = `<div class="home-head"><button class="menu-button" id="menu-button" aria-label="Abrir menú">☰</button><span class="brand"><img src="./assets/codequet/quet-head.jpg" alt=""> CODEQUET <i>· SQL</i></span><div class="stats"><span class="stat streak">🔥 ${saved.streak}</span><span class="stat xp">✦ ${saved.xp} XP</span></div></div><section class="welcome-card"><div class="welcome-art"><img src="./assets/codequet/quet-banner.png" alt="Quet, tu guía para aprender SQL"></div><div><span class="eyebrow">Tu aventura SQL</span><h1>Aprende haciendo.</h1><p>7 unidades · 28 lecciones interactivas. Tu progreso se guarda en este dispositivo.</p></div></section><div class="route-heading"><h2>Elige tu lenguaje</h2><span>1 disponible</span></div><button class="selected-course"><span>🗄️</span><span><strong>SQL</strong><small>7 unidades · consultas, filtros, tablas y relaciones</small></span><b>✓</b></button><div class="route-heading"><h2>Temas que aprenderás</h2><span>${saved.completed.length} / ${lessons.length} lecciones</span></div>${grouped}`;
+  screen.innerHTML = `<div class="home-head"><button class="menu-button" id="menu-button" aria-label="Abrir menú">☰</button><span class="brand"><img src="./assets/codequet/quet-head.jpg" alt=""> CODEQUET <i>· ${esc(course.name)}</i></span><div class="stats"><span class="stat streak">🔥 ${saved.streak}</span><span class="stat xp">✦ ${saved.xp} XP</span></div></div><section class="welcome-card"><div class="welcome-art"><img src="./assets/codequet/quet-banner.png" alt="Quet, tu guía para aprender"></div><div><span class="eyebrow">Tu aventura ${esc(course.name)}</span><h1>Aprende haciendo.</h1><p>${units.length} unidades · ${lessons.length} lecciones desde cero. Tu progreso se guarda en este dispositivo.</p></div></section><div class="route-heading"><h2>Elige un curso</h2><span>${courses.length} disponibles</span></div><div class="course-picker">${courses.map(item=>`<button class="course-card ${item.id===course.id?'selected':''}" data-course="${item.id}"><span class="course-mark">${esc(item.icon)}</span><span><strong>${esc(item.name)}</strong><small>${esc(item.description)}</small></span>${item.id===course.id?'<b>✓</b>':''}</button>`).join('')}</div><div class="route-heading"><h2>Temas que aprenderás</h2><span>${courseProgress().completed.length} / ${lessons.length}</span></div>${grouped}`;
   document.querySelector('#menu-button').onclick=renderProfile;
+  screen.querySelectorAll('[data-course]').forEach(button=>button.onclick=()=>{setCourse(button.dataset.course);persist();renderHome();});
   screen.querySelectorAll('[data-exam]').forEach(button=>button.onclick=()=>startExam(Number(button.dataset.exam)));
   screen.querySelectorAll('[data-lesson]').forEach(button=>button.addEventListener('click',()=>startLesson(Number(button.dataset.lesson))));
 }
 function startLesson(index,practice=false) {
   lessonIndex=index; stepIndex=0; hearts=5; earned=0; correct=0; selectedOption=null; lockedAnswer=false; feedback=''; userResult=null; challengeState='';
+  window.lastCode=lessons[index].steps[2].query || '';
   mode='lesson'; renderStep();
   showLessonEntry({first:!saved.introSeen,practice});
 }
@@ -247,13 +270,17 @@ function renderStep() {
     body=`<span class="eyebrow">Pregunta rápida</span><h2>${esc(step.title)}</h2><p class="question">${esc(step.question)}</p><button class="quet-help-inline" id="quet-help">🦜 ¿Necesitas ayuda? Pregúntale a Quet</button><div class="option-list">${step.options.map((option,index)=>{const cls=selectedOption===index?(index===step.answer&&lockedAnswer?'correct':lockedAnswer?'wrong':'selected'):'';return `<button class="option ${cls}" data-option="${index}" ${lockedAnswer?'disabled':''}>${esc(option)}</button>`;}).join('')}</div><div class="feedback ${feedback.startsWith('¡')?'success-message':'error-message'}">${esc(feedback)}</div>`;
     buttonText=lockedAnswer&&selectedOption===step.answer?'Continuar':'Comprobar'; disabled=selectedOption===null||lockedAnswer&&selectedOption!==step.answer;
   } else {
-    body=`<span class="eyebrow">Unidad ${lesson.unit+1} · lección ${lesson.lessonNumber} de 4</span><h2>${esc(step.title)}</h2><p>${esc(step.prompt)}</p><button class="quet-help-inline" id="quet-help">🦜 Quet, ayúdame con este reto</button><label class="editor-label" for="sql-input">Tu consulta</label><textarea id="sql-input" class="sql-editor" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" aria-label="Escribe tu consulta SQL">${esc(window.lastSql || '')}</textarea>${userResult?tableHtml(userResult):''}<div class="feedback ${challengeState==='success'?'success-message':challengeState==='failure'||challengeState==='syntax'?'error-message':''}">${esc(feedback)}</div>${challengeState==='failure'?`<p class="hint">💡 Pista: ${esc(step.hint)}</p>`:''}`;
+    const editorLabel=course.id==='sql'?'Tu consulta':`Tu código ${course.name}`;
+    const starter=step.query.split('\n').slice(0,1)[0];
+    body=`<span class="eyebrow">Unidad ${lesson.unit+1} · lección ${lesson.lessonNumber} de ${units[lesson.unit].lessons.length}</span><h2>${esc(step.title)}</h2><p>${esc(step.prompt)}</p><button class="quet-help-inline" id="quet-help">🦜 Quet, ayúdame con este reto</button><label class="editor-label" for="sql-input">${editorLabel}</label><div class="code-editor-tools"><button type="button" data-snippet="()">( )</button><button type="button" data-snippet="{}">{ }</button><button type="button" data-snippet="[]">[ ]</button><button type="button" data-snippet="\"\"">" "</button><button type="button" data-starter="true">Empezar ejemplo</button></div><textarea id="sql-input" class="sql-editor" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" aria-label="${editorLabel}">${esc(course.id==='sql'?(window.lastSql||''):(window.lastCode??starter??''))}</textarea>${userResult&&course.id==='sql'?tableHtml(userResult):''}<div class="feedback ${challengeState==='success'?'success-message':challengeState==='failure'||challengeState==='syntax'?'error-message':''}">${esc(feedback)}</div>${challengeState==='failure'?`<p class="hint">💡 Pista: ${esc(step.hint)}</p>`:''}`;
     buttonText=challengeState==='success'?'Continuar':'Comprobar consulta'; disabled=false;
   }
   screen.innerHTML=`<span class="eyebrow">${mode==='exam'?`EXAMEN · ${examQuestion+1}/10`:`${esc(lesson.title)} · ${stepIndex+1}/${lesson.steps.length}`}</span><section class="step-card ${challengeState==='success'?'success':challengeState==='failure'||challengeState==='syntax'?'failure':''}">${body}</section><div class="spacer"></div><div class="bottom-action"><button class="primary" id="action-button" ${disabled?'disabled':''}>${buttonText}</button></div>`;
   screen.querySelector('#quet-help')?.addEventListener('click',openQuetHelp);
   screen.querySelectorAll('[data-option]').forEach(button=>button.addEventListener('click',()=>{selectedOption=Number(button.dataset.option); feedback=''; lockedAnswer=false; renderStep();}));
-  const editor=screen.querySelector('#sql-input'); if(editor) editor.addEventListener('input',()=>{window.lastSql=editor.value;});
+  const editor=screen.querySelector('#sql-input'); if(editor) editor.addEventListener('input',()=>{if(course.id==='sql')window.lastSql=editor.value;else window.lastCode=editor.value;});
+  screen.querySelectorAll('[data-snippet]').forEach(button=>button.onclick=()=>{if(!editor)return;const value=button.dataset.snippet;const start=editor.selectionStart,end=editor.selectionEnd;editor.setRangeText(value,start,end,'end');editor.dispatchEvent(new Event('input',{bubbles:true}));editor.focus();});
+  screen.querySelector('[data-starter]')?.addEventListener('click',()=>{if(!editor)return;editor.value=step.query;editor.dispatchEvent(new Event('input',{bubbles:true}));editor.focus();});
   document.querySelector('#action-button').addEventListener('click',()=>handleAction(step));
 }
 function openQuetHelp() {
@@ -261,24 +288,27 @@ function openQuetHelp() {
   const answer=step.type==='reto'?step.hint:step.type==='quiz'?`Pista: ${step.options.filter((_,i)=>i!==step.answer).join(' o ')} no responden a la pregunta. Relee la idea clave de ${lesson.title}.`:step.text;
   const overlay=document.createElement('div');overlay.className='quet-sheet';overlay.innerHTML=`<div class="quet-sheet-backdrop"></div><section class="quet-sheet-panel"><div class="quet-sheet-handle"></div><div class="quet-sheet-title"><img src="./assets/codequet/quet-head.jpg" alt="Quet"><div><span class="eyebrow">AYUDA DEL CURSO · SIN CONEXIÓN</span><h2>Quet te acompaña</h2></div></div><p>${esc(step.type==='reto'?step.prompt:step.type==='quiz'?step.question:step.text)}</p><div class="quet-help-options"><button data-help="hint">Dame una pista</button><button data-help="explain">Explícame el concepto</button><button data-help="answer">Ayúdame con mi respuesta</button></div><div class="quet-answer" id="quet-answer">${esc(step.type==='reto'?answer:'Primero intenta responder; Quet te puede explicar la regla y darte una pista.')}</div><button class="primary" id="close-quet">Volver al ejercicio</button></section>`;
   document.body.append(overlay);overlay.querySelector('.quet-sheet-backdrop').onclick=()=>overlay.remove();overlay.querySelector('#close-quet').onclick=()=>overlay.remove();
-  const hints={hint:step.type==='reto'?step.hint:`Piensa en el objetivo de ${lesson.title} y descarta las cláusulas que hacen otra cosa.`,explain:step.type==='reto'?`Esta consulta trabaja con la tabla de práctica. ${step.hint}`:step.type==='quiz'?`Recuerda: ${step.question}`:step.text,answer:`Respuesta sugerida: ${step.type==='reto'?step.query:step.type==='quiz'?step.options[step.answer]:step.code}`};
+  const hints={hint:step.type==='reto'?step.hint:`Piensa en el objetivo de ${lesson.title} y descarta las opciones que hacen otra cosa.`,explain:step.type==='reto'?`Empieza con el concepto principal: ${step.hint}`:step.type==='quiz'?`Recuerda: ${step.question}`:step.text,answer:`Respuesta sugerida:\n${step.type==='reto'?step.query:step.type==='quiz'?step.options[step.answer]:step.code}`};
   overlay.querySelectorAll('[data-help]').forEach(button=>button.onclick=()=>{overlay.querySelector('#quet-answer').textContent=hints[button.dataset.help];playSfx();});
   saved.helpCount=(saved.helpCount||0)+1;persist();playSfx('open');
 }
 
 function startExam(unitIndex) {
-  mode='exam';examUnit=unitIndex;examQuestion=0;examAnswers=[];lessonIndex=unitIndex*4;stepIndex=0;hearts=5;earned=0;correct=0;selectedOption=null;lockedAnswer=false;renderExamQuestion();
+  mode='exam';examUnit=unitIndex;examQuestion=0;examAnswers=[];lessonIndex=unitIndex*units[unitIndex].lessons.length;stepIndex=0;hearts=5;earned=0;correct=0;selectedOption=null;lockedAnswer=false;renderExamQuestion();
 }
 function renderExamQuestion() {
   mode='exam';topbar.hidden=false;bottomNav.hidden=true;heartCount.textContent=String(10-examQuestion);progressFill.style.width=`${examQuestion*10}%`;
-  const q=examQuestions[Math.min(examUnit,examQuestions.length-1)][examQuestion];
+  const examQuestions=getExamQuestions();
+  const bank=examQuestions[Math.min(examUnit,examQuestions.length-1)];
+  while(bank.length<10)bank.push(...bank.slice(0,Math.max(1,10-bank.length)));
+  const q=bank[examQuestion%bank.length];
   screen.innerHTML=`<span class="eyebrow">CODEQUET · EXAMEN DE UNIDAD ${examUnit+1}</span><section class="step-card"><div class="exam-title"><img src="./assets/codequet/quet-head.jpg" alt=""><span><h2>Quet te reta</h2><small>Pregunta ${examQuestion+1} de 10 · sin corazones</small></span></div><p class="question">${esc(q.question)}</p><div class="option-list">${q.options.map((option,i)=>`<button class="option ${examAnswers[examQuestion]===i?'selected':''}" data-exam-answer="${i}">${esc(option)}</button>`).join('')}</div></section><div class="spacer"></div><div class="bottom-action"><button class="primary" id="exam-submit" ${examAnswers[examQuestion]===undefined?'disabled':''}>${examQuestion===9?'Entregar examen':'Siguiente pregunta'}</button></div>`;
   screen.querySelectorAll('[data-exam-answer]').forEach(button=>button.onclick=()=>{examAnswers[examQuestion]=Number(button.dataset.examAnswer);playSfx();renderExamQuestion();});
   document.querySelector('#exam-submit').onclick=()=>{if(examQuestion<9){examQuestion++;renderExamQuestion();return;}finishExam();};
 }
 function finishExam() {
-  const questions=examQuestions[Math.min(examUnit,examQuestions.length-1)];const score=examAnswers.reduce((n,a,i)=>n+(a===questions[i].answer?1:0),0);const passed=score>=8;
-  saved.exams=saved.exams.filter(x=>x.unit!==examUnit);saved.exams.push({unit:examUnit,score,passed,date:currentDay()});if(passed)saved.xp+=50;persist();mode='exam-result';topbar.hidden=true;bottomNav.hidden=false;renderBottomNav('aprender');playSfx(passed?'success':'tap');
+  const bank=getExamQuestions()[Math.min(examUnit,getExamQuestions().length-1)];while(bank.length<10)bank.push(...bank.slice(0,Math.max(1,10-bank.length)));const score=examAnswers.reduce((n,a,i)=>n+(a===bank[i%bank.length].answer?1:0),0);const passed=score>=8;
+  const progress=courseProgress();progress.exams=progress.exams.filter(x=>x.unit!==examUnit);progress.exams.push({unit:examUnit,score,passed,date:currentDay()});saved.exams=progress.exams;if(passed)saved.xp+=50;persist();mode='exam-result';topbar.hidden=true;bottomNav.hidden=false;renderBottomNav('aprender');playSfx(passed?'success':'tap');
   screen.innerHTML=`<span class="eyebrow">${passed?'UNIDAD CERTIFICADA':'SIGUE PRACTICANDO'}</span><section class="exam-result-card"><img src="./assets/codequet/quet-banner.png" alt="Quet celebra tu esfuerzo"><div class="summary-icon">${passed?'★':'↻'}</div><h1>${passed?'¡Lo lograste!':'¡Vas avanzando!'}</h1><p>${passed?'Aprobaste el examen de unidad. Quet está orgulloso de ti.':'Necesitas 8 de 10 respuestas. Repasa y vuelve a intentarlo cuando quieras.'}</p><div class="exam-score">${score}<small>/10</small></div><button class="primary" id="exam-done">Volver al mapa</button></section>`;document.querySelector('#exam-done').onclick=renderHome;
 }
 function loseHeart() {
@@ -298,6 +328,15 @@ function handleAction(step) {
     renderStep();return;
   }
   if(challengeState==='success'){window.lastSql='';advance();return;}
+  if(course.id!=='sql'){
+    const entered=screen.querySelector('#sql-input')?.value.trim()||'';
+    if(!entered){feedback='Escribe una respuesta o toca “Empezar ejemplo” para explorar el código.';challengeState='failure';renderStep();return;}
+    const normalize=value=>String(value).replace(/\s+/g,'').replace(/;+/g,';').toLowerCase();
+    const equivalent=normalize(entered)===normalize(step.query);
+    if(equivalent){challengeState='success';feedback='✓ ¡Tu ejemplo coincide con el reto! +20 XP';earned+=20;correct++;saved.xp+=20;persist();playSfx('success');}
+    else{challengeState='failure';feedback='Todavía no coincide con el ejemplo esperado. Usa la pista de Quet o ajusta tu código.';if(loseHeart())return;}
+    renderStep();return;
+  }
   const sql=screen.querySelector('#sql-input')?.value || '';
   try {
     userResult=runQuery(sql);
@@ -317,7 +356,7 @@ function handleAction(step) {
 function finishLesson() {
   mode='summary';topbar.hidden=true;bottomNav.hidden=false;renderBottomNav('aprender');playSfx('success');
   const id=lessons[lessonIndex].id;
-  if(!saved.completed.includes(id))saved.completed.push(id);
+  markComplete(id);
   const today=currentDay();
   if(saved.lastDay!==today){
     const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
@@ -325,7 +364,7 @@ function finishLesson() {
     saved.streak=saved.lastDay===y?saved.streak+1:1;saved.lastDay=today;
   }
   persist();
-  screen.innerHTML=`<span class="eyebrow">Lección completada</span><section class="lesson-win"><img src="./assets/codequet/quet-banner.png" alt="Quet celebra tu progreso"><span class="summary-icon">✓</span><h1>Buen trabajo.</h1><p>Terminaste ${esc(lessons[lessonIndex].title)}. Cada consulta te acerca a leer datos con confianza.</p></section><div class="summary-stats"><div class="summary-stat"><strong>${correct}</strong><span>aciertos</span></div><div class="summary-stat"><strong>+${earned}</strong><span>XP ganada</span></div><div class="summary-stat"><strong>🔥 ${saved.streak}</strong><span>racha</span></div></div><div class="spacer"></div><div class="bottom-action"><button class="primary" id="home-button">Volver a lecciones</button></div>`;
+  screen.innerHTML=`<span class="eyebrow">Lección completada · ${esc(course.name)}</span><section class="lesson-win"><img src="./assets/codequet/quet-banner.png" alt="Quet celebra tu progreso"><span class="summary-icon">✓</span><h1>Buen trabajo.</h1><p>Terminaste ${esc(lessons[lessonIndex].title)}. Cada reto te acerca a programar con confianza.</p></section><div class="summary-stats"><div class="summary-stat"><strong>${correct}</strong><span>aciertos</span></div><div class="summary-stat"><strong>+${earned}</strong><span>XP ganada</span></div><div class="summary-stat"><strong>🔥 ${saved.streak}</strong><span>racha</span></div></div><div class="spacer"></div><div class="bottom-action"><button class="primary" id="home-button">Volver al camino</button></div>`;
   document.querySelector('#home-button').onclick=renderHome;
 }
 function renderDefeat() {
