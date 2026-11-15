@@ -85,3 +85,27 @@
 .practice-note{margin:10px 0;padding:9px 11px;border-left:3px solid #58b8f1;border-radius:7px;background:#11293c}
 .language-picker{grid-template-columns:1fr}
 @media(min-width:620px){.language-picker{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* Inicio explica las unidades; Practicar contiene sus lecciones y retos. */
+.topic-list,.practice-units{display:grid;gap:12px}
+.topic-card,.practice-unit{min-width:0;padding:12px;border:1px solid #304e69;border-radius:19px;background:linear-gradient(145deg,#172d42,#132538)}
+.topic-card .unit-heading,.practice-unit .unit-heading{padding:2px 1px 8px}
+.topic-details{border-top:1px solid #2b425a;margin-top:3px;padding:10px 2px 2px}
+.topic-details summary{display:flex;justify-content:space-between;gap:10px;align-items:center;color:#cfeaff;font-size:13px;font-weight:800;cursor:pointer;list-style:none}
+.topic-details summary::-webkit-details-marker{display:none}
+.topic-details summary::after{content:"＋";color:#76caff;font-size:17px}
+.topic-details[open] summary::after{content:"−"}
+.topic-details summary span{margin-left:auto;color:#9cb4c9;font-size:11px;font-weight:650}
+.topic-details ul{display:grid;gap:8px;margin:12px 0 4px;padding:0;list-style:none}
+.topic-details li{display:grid;gap:2px;padding-left:11px;border-left:2px solid #3678a8}
+.topic-details li strong{font-size:12px;color:#e6f4ff}
+.topic-details li span{font-size:11px;line-height:1.4;color:#a9bed1}
+.topic-practice{display:flex;justify-content:space-between;align-items:center;min-height:46px;margin-top:12px;padding:10px 14px;font-size:13px;border-radius:14px}
+.topic-practice span{font-size:19px}
+.practice-filter{display:flex;justify-content:flex-end;margin:0 0 10px}
+.practice-filter .secondary{width:auto;min-height:38px;padding:8px 12px;font-size:12px}
+.practice-filter .secondary:disabled{opacity:.8}
+.practice-unit{scroll-margin-top:10px}
+.practice-unit .practice-list{display:grid;gap:8px}
+.practice-unit .lesson-card{min-height:65px}
+.practice-unit .unit-exam{margin-top:10px}
