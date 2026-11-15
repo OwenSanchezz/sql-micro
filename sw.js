@@ -1,7 +1,8 @@
-const CACHE_NAME = 'codequet-sql-v9';
+const CACHE_NAME = 'codequet-sql-v10';
 const APP_FILES = [
   './', './index.html', './styles.css', './app.js', './lessons.js',
   './assets/codequet/splash-blue.jpg', './assets/codequet/quet-banner.png', './assets/codequet/quet-head.jpg',
+  './assets/codequet/quet-reference.png',
   './assets/codequet/lesson-entry.mp4', './assets/codequet/lesson-entry-poster.jpg',
   './manifest.json', './icons/icon-180.png', './icons/icon-192.png',
   './icons/icon-512.png', './vendor/sql-wasm.js', './vendor/sql-wasm.wasm',
@@ -19,5 +20,4 @@ self.addEventListener('fetch', event => {
     return response;
   })));
 });
-
 

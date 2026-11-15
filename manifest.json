@@ -1,11 +1,11 @@
 {
-  "name": "CodeQuet SQL · Paso a Paso",
-  "short_name": "CodeQuet SQL",
+  "name": "CodeQuet",
+  "short_name": "CodeQuet",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "theme_color": "#101a27",
+  "theme_color": "#208aef",
   "background_color": "#101a27",
   "icons": [
     { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },

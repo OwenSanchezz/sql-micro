@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#101a27">
+  <meta name="theme-color" content="#208aef">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="CodeQuet SQL">
-  <meta name="description" content="Aprende SQL desde cero con micro-lecciones interactivas.">
-  <link rel="manifest" href="./manifest.json?v=codequet-2">
+  <meta name="apple-mobile-web-app-title" content="CodeQuet">
+  <meta name="description" content="Aprende SQL con CodeQuet y Quet.">
+  <link rel="manifest" href="./manifest.json?v=codequet-4">
   <link rel="apple-touch-icon" href="./icons/icon-180.png">
   <link rel="icon" type="image/png" href="./icons/icon-192.png">
-  <link rel="stylesheet" href="./styles.css?v=codequet-2">
-  <title>CodeQuet SQL · Paso a Paso</title>
+  <link rel="stylesheet" href="./styles.css?v=codequet-4">
+  <title>CodeQuet</title>
 </head>
 <body>
   <div id="app" class="app-shell">
@@ -22,10 +22,15 @@
       <div class="hearts" aria-label="Vidas restantes"><span aria-hidden="true">♥</span> <b id="heart-count">5</b></div>
     </header>
     <main id="screen" class="screen" tabindex="-1"></main>
-    <footer class="site-footer">Contenido propio. Inspirado en freeCodeCamp y Duolingo.</footer>
+    <nav id="bottom-nav" class="bottom-nav" aria-label="Navegación principal"></nav>
   </div>
-  <script src="./vendor/sql-wasm.js?v=codequet-2"></script>
-  <script type="module" src="./app.js?v=codequet-2"></script>
+  <div id="splash" class="splash-screen" aria-label="CodeQuet">
+    <img src="./assets/codequet/quet-reference.png" alt="Quet, mascota de CodeQuet">
+    <span>Tu aventura empieza aquí</span>
+    <button id="enter-app" class="splash-enter">Entrar a CodeQuet</button>
+  </div>
+  <script src="./vendor/sql-wasm.js?v=codequet-4"></script>
+  <script type="module" src="./app.js?v=codequet-4"></script>
 </body>
 </html>
 
