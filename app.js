@@ -19,6 +19,7 @@ const PELICULAS = [
   [11,'Ya no estoy aquí','Fernando Frías',2019,'Drama',0.8],
   [12,'El secreto de sus ojos','Juan José Campanella',2009,'Suspenso',34.6],
 ];
+let SQLModule = null;
 const DIRECTORES = [
   ['Guillermo del Toro','México',1964],['Alfonso Cuarón','México',1961],
   ['Alejandro González Iñárritu','México',1963],['Alfonso Arau','México',1932],
@@ -45,7 +46,8 @@ let saved = safeLoad();
 function persist() { try { localStorage.setItem(STORE_KEY, JSON.stringify(saved)); } catch { /* El progreso sigue en memoria si el navegador bloquea el almacenamiento. */ } }
 function esc(value) { return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
 function makeDatabase() {
-  const db = new window.SQL.Database();
+  if (!SQLModule) throw new Error('El motor SQL todavía se está iniciando. Inténtalo de nuevo en un momento.');
+  const db = new SQLModule.Database();
   db.run('CREATE TABLE peliculas (id INTEGER, titulo TEXT, director TEXT, anio INTEGER, genero TEXT, recaudacion REAL);');
   const movie = db.prepare('INSERT INTO peliculas VALUES (?, ?, ?, ?, ?, ?);');
   for (const row of PELICULAS) movie.run(row);
@@ -86,7 +88,6 @@ let lockedAnswer = false;
 let feedback = '';
 let userResult = null;
 let challengeState = '';
-let sqlReady = false;
 
 function renderHome() {
   mode = 'home'; topbar.hidden = true;
@@ -187,8 +188,11 @@ function renderDefeat() {
 async function boot() {
   renderHome();
   if(!window.initSqlJs){screen.insertAdjacentHTML('afterbegin','<p class="error-message">No se encontró SQL.js local. Revisa que /vendor/sql-wasm.js esté disponible.</p>');return;}
-  try { window.SQL = await window.initSqlJs({locateFile:file=>new URL(`./vendor/${file}`,import.meta.url).href}); sqlReady=true; }
+  try {
+    SQLModule = await window.initSqlJs({locateFile:file=>new URL(`./vendor/${file}`,import.meta.url).href});
+    if (!SQLModule || typeof SQLModule.Database !== 'function') throw new Error('SQL.js no devolvió la interfaz esperada.');
+  }
   catch(error){console.error('No se pudo iniciar SQLite:',error);screen.insertAdjacentHTML('afterbegin','<p class="error-message">No se pudo cargar el motor SQL local. Comprueba que el archivo WASM esté instalado.</p>');}
-  if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(error=>console.warn('Service Worker no disponible:',error));}
+  if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(error=>console.warn('Service Worker no disponible:',error));}
 }
 boot();

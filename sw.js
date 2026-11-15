@@ -1,11 +1,11 @@
-const CACHE_NAME = 'sql-paso-a-paso-v4';
+const CACHE_NAME = 'sql-paso-a-paso-v5';
 const APP_FILES = [
   './', './index.html', './styles.css', './app.js', './lessons.js',
   './manifest.json', './icons/icon-180.png', './icons/icon-192.png',
   './icons/icon-512.png', './vendor/sql-wasm.js', './vendor/sql-wasm.wasm',
 ];
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_FILES)).then(() => self.skipWaiting()));
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_FILES.map(path => new Request(new URL(path, self.registration.scope), { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', event => {
   event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)))).then(() => self.clients.claim()));
