@@ -56,12 +56,24 @@ function makeDatabase() {
   const director = db.prepare('INSERT INTO directores VALUES (?, ?, ?);');
   for (const row of DIRECTORES) director.run(row);
   director.free();
+  db.run('CREATE TABLE productos (id INTEGER, nombre TEXT, precio REAL, stock INTEGER, categoria_id INTEGER);');
+  db.run("INSERT INTO productos VALUES (1,'Pan',3,5,1),(2,'Leche',8,2,1),(3,'Libro',20,0,2);");
+  db.run('CREATE TABLE categorias (id INTEGER, nombre TEXT);');
+  db.run("INSERT INTO categorias VALUES (1,'Alimentos'),(2,'Lectura');");
+  db.run('CREATE TABLE ventas (id INTEGER, producto_id INTEGER, cantidad INTEGER);');
+  db.run('INSERT INTO ventas VALUES (1,1,2);');
   return db;
 }
 function runQuery(sql) {
   const db = makeDatabase();
   try {
-    const results = db.exec(sql);
+    let results = [];
+    const statements = sql.split(';').map(part => part.trim()).filter(Boolean);
+    for (const statement of statements) {
+      if (/^(BEGIN|COMMIT|ROLLBACK)\b/i.test(statement)) { db.run(statement); continue; }
+      const output = db.exec(statement);
+      if (output.length) results = output;
+    }
     const result = results[0] || { columns: [], values: [] };
     return { columns: result.columns, values: result.values };
   } finally { db.close(); }
@@ -91,17 +103,33 @@ let challengeState = '';
 
 function renderHome() {
   mode = 'home'; topbar.hidden = true;
-  const cards = lessons.map((lesson,index) => {
-    const unlocked = index === 0 || saved.completed.includes(lessons[index-1].id);
-    const done = saved.completed.includes(lesson.id);
-    return `<button class="lesson-card" data-lesson="${index}" ${unlocked?'':'disabled'}><span class="lesson-icon">${lesson.icon}</span><span><span class="lesson-title">${esc(lesson.title)}</span><span class="lesson-subtitle">${esc(lesson.subtitle)}</span><span class="lesson-progress"><span style="width:${done?'100':'0'}%"></span></span></span><span class="lesson-state">${done?'✓':unlocked?'›':'🔒'}</span></button>`;
+  const grouped = units.map((unit, unitIndex) => {
+    const unitCards = lessons.map((lesson,index)=>({lesson,index})).filter(item=>item.lesson.unit===unitIndex).map(({lesson,index})=>{
+      const unlocked = index===0 || saved.completed.includes(lessons[index-1].id), done=saved.completed.includes(lesson.id);
+      return `<button class="lesson-card" data-lesson="${index}" ${unlocked?'':'disabled'}><span class="lesson-icon">${lesson.icon}</span><span><span class="lesson-title">${esc(lesson.title)}</span><span class="lesson-subtitle">${esc(lesson.subtitle)}</span><span class="lesson-progress"><span style="width:${done?'100':'0'}%"></span></span></span><span class="lesson-state">${done?'✓':unlocked?'›':'🔒'}</span></button>`;
+    }).join('');
+    return `<section class="unit-section"><div class="unit-heading"><span class="unit-mark">${unit.icon}</span><span><span class="unit-label">Unidad ${unitIndex + 1}</span><strong>${esc(unit.title)}</strong><small>${esc(unit.subtitle)}</small></span></div><div class="lesson-list">${unitCards}</div></section>`;
   }).join('');
-  screen.innerHTML = `<div class="home-head"><span class="brand">SQL · PASO A PASO</span><div class="stats"><span class="stat streak">🔥 ${saved.streak}</span><span class="stat xp">✦ ${saved.xp} XP</span></div></div><span class="eyebrow">Aprende haciendo</span><h1>SQL desde cero.</h1><p>Seis paradas para aprender a consultar y relacionar datos. Tu progreso se guarda en este dispositivo.</p><div class="lesson-list">${cards}</div><div class="spacer"></div>`;
+  screen.innerHTML = `<div class="home-head"><span class="brand"><img src="./assets/codequet/quet-head.jpg" alt=""> CODEQUET <i>· SQL</i></span><div class="stats"><span class="stat streak">🔥 ${saved.streak}</span><span class="stat xp">✦ ${saved.xp} XP</span></div></div><section class="welcome-card"><img src="./assets/codequet/quet-banner.png" alt="Quet, tu guía para aprender SQL"><div><span class="eyebrow">Tu aventura SQL</span><h1>Aprende haciendo.</h1><p>7 unidades · 28 lecciones interactivas. Tu progreso se guarda en este dispositivo.</p></div></section><div class="route-heading"><h2>Tu ruta</h2><span>${saved.completed.length} / ${lessons.length} completadas</span></div>${grouped}`;
   screen.querySelectorAll('[data-lesson]').forEach(button=>button.addEventListener('click',()=>startLesson(Number(button.dataset.lesson))));
 }
 function startLesson(index) {
   lessonIndex=index; stepIndex=0; hearts=5; earned=0; correct=0; selectedOption=null; lockedAnswer=false; feedback=''; userResult=null; challengeState='';
   mode='lesson'; renderStep();
+  showLessonEntry();
+}
+function showLessonEntry() {
+  if (sessionStorage.getItem('quet-intro-seen')) return;
+  sessionStorage.setItem('quet-intro-seen','1');
+  const overlay = document.createElement('div');
+  overlay.className = 'intro-overlay';
+  overlay.innerHTML = `<video class="intro-video" playsinline muted autoplay poster="./assets/codequet/lesson-entry-poster.jpg"><source src="./assets/codequet/lesson-entry.mp4" type="video/mp4"></video><div class="intro-controls"><strong>¡Hola, soy Quet!</strong><span>Vamos a aprender SQL juntos.</span><button class="intro-skip">Empezar</button></div>`;
+  document.body.append(overlay);
+  const close = () => { overlay.classList.add('intro-exit'); setTimeout(()=>overlay.remove(),260); };
+  const video = overlay.querySelector('video');
+  video.addEventListener('ended',close,{once:true});
+  video.play().catch(()=>{});
+  overlay.querySelector('button').addEventListener('click',close);
 }
 function updateTopbar() {
   topbar.hidden=false;
@@ -124,7 +152,7 @@ function renderStep() {
     body=`<span class="eyebrow">Pregunta rápida</span><h2>${esc(step.title)}</h2><p class="question">${esc(step.question)}</p><div class="option-list">${step.options.map((option,index)=>{const cls=selectedOption===index?(index===step.answer&&lockedAnswer?'correct':lockedAnswer?'wrong':'selected'):'';return `<button class="option ${cls}" data-option="${index}" ${lockedAnswer?'disabled':''}>${esc(option)}</button>`;}).join('')}</div><div class="feedback ${feedback.startsWith('¡')?'success-message':'error-message'}">${esc(feedback)}</div>`;
     buttonText=lockedAnswer&&selectedOption===step.answer?'Continuar':'Comprobar'; disabled=selectedOption===null||lockedAnswer&&selectedOption!==step.answer;
   } else {
-    body=`<span class="eyebrow">Reto ${lessonIndex+1} de 6</span><h2>${esc(step.title)}</h2><p>${esc(step.prompt)}</p><label class="editor-label" for="sql-input">Tu consulta</label><textarea id="sql-input" class="sql-editor" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" aria-label="Escribe tu consulta SQL">${esc(window.lastSql || '')}</textarea>${userResult?tableHtml(userResult):''}<div class="feedback ${challengeState==='success'?'success-message':challengeState==='failure'||challengeState==='syntax'?'error-message':''}">${esc(feedback)}</div>${challengeState==='failure'?`<p class="hint">💡 Pista: ${esc(step.hint)}</p>`:''}`;
+    body=`<span class="eyebrow">Unidad ${lesson.unit+1} · lección ${lesson.lessonNumber} de 4</span><h2>${esc(step.title)}</h2><p>${esc(step.prompt)}</p><label class="editor-label" for="sql-input">Tu consulta</label><textarea id="sql-input" class="sql-editor" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" aria-label="Escribe tu consulta SQL">${esc(window.lastSql || '')}</textarea>${userResult?tableHtml(userResult):''}<div class="feedback ${challengeState==='success'?'success-message':challengeState==='failure'||challengeState==='syntax'?'error-message':''}">${esc(feedback)}</div>${challengeState==='failure'?`<p class="hint">💡 Pista: ${esc(step.hint)}</p>`:''}`;
     buttonText=challengeState==='success'?'Continuar':'Comprobar consulta'; disabled=false;
   }
   screen.innerHTML=`<span class="eyebrow">${esc(lesson.title)} · ${stepIndex+1}/${lesson.steps.length}</span><section class="step-card ${challengeState==='success'?'success':challengeState==='failure'||challengeState==='syntax'?'failure':''}">${body}</section><div class="spacer"></div><div class="bottom-action"><button class="primary" id="action-button" ${disabled?'disabled':''}>${buttonText}</button></div>`;

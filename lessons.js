@@ -1,51 +1,54 @@
-// Contenido de las lecciones: separado del motor de navegación y validación.
-export const lessons = [
-  {
-    id: 'select', title: 'SELECT básico', subtitle: 'Elige qué quieres ver', icon: '▤',
-    steps: [
-      { type: 'teoria', title: 'Tu primera consulta', text: 'SELECT elige columnas. FROM indica la tabla de donde salen.', code: 'SELECT titulo, anio\nFROM peliculas;' },
-      { type: 'quiz', title: 'Elige la tabla', question: '¿Qué palabra indica de qué tabla leer los datos?', options: ['WHERE', 'FROM', 'ORDER BY'], answer: 1 },
-      { type: 'reto', title: 'Explora el catálogo', prompt: 'Muestra el título y el género de todas las películas.', query: 'SELECT titulo, genero FROM peliculas;', hint: 'Elige las dos columnas con SELECT y consulta la tabla peliculas con FROM.', orderMatters: false },
-    ]
-  },
-  {
-    id: 'where', title: 'WHERE', subtitle: 'Encuentra lo que buscas', icon: '⌕',
-    steps: [
-      { type: 'teoria', title: 'Filtra filas', text: 'WHERE conserva solo las filas que cumplen una condición.', code: "SELECT titulo\nFROM peliculas\nWHERE genero = 'Ciencia ficción';" },
-      { type: 'quiz', title: 'Una condición', question: '¿Qué operador significa «mayor que»?', options: ['>=', '<>', '>'], answer: 2 },
-      { type: 'reto', title: 'Busca las más recientes', prompt: 'Muestra títulos y años de las películas estrenadas desde 2010.', query: 'SELECT titulo, anio FROM peliculas WHERE anio >= 2010;', hint: 'Compara la columna anio con 2010 usando >=.', orderMatters: false },
-    ]
-  },
-  {
-    id: 'order', title: 'ORDER BY', subtitle: 'Pon los datos en orden', icon: '↕',
-    steps: [
-      { type: 'teoria', title: 'Ordena resultados', text: 'ORDER BY ordena las filas. ASC sube; DESC baja.', code: 'SELECT titulo, anio\nFROM peliculas\nORDER BY anio DESC;' },
-      { type: 'quiz', title: 'Del más nuevo al más viejo', question: '¿Qué dirección debes usar para ordenar años de mayor a menor?', options: ['ASC', 'DESC', 'GROUP'], answer: 1 },
-      { type: 'reto', title: 'Las más taquilleras', prompt: 'Muestra título y recaudación, ordenados de mayor a menor recaudación.', query: 'SELECT titulo, recaudacion FROM peliculas ORDER BY recaudacion DESC;', hint: 'Ordena por recaudacion y usa DESC al final.', orderMatters: true },
-    ]
-  },
-  {
-    id: 'aggregate', title: 'Funciones de agregado', subtitle: 'Resume muchas filas', icon: '∑',
-    steps: [
-      { type: 'teoria', title: 'Una fila de resumen', text: 'COUNT cuenta filas; SUM suma valores; AVG calcula el promedio.', code: 'SELECT COUNT(*) AS total\nFROM peliculas;' },
-      { type: 'quiz', title: 'Cuenta las películas', question: '¿Qué función cuenta las filas de una tabla?', options: ['SUM(*)', 'COUNT(*)', 'ORDER(*)'], answer: 1 },
-      { type: 'reto', title: 'Mide el catálogo', prompt: 'Devuelve el número total de películas y llámalo total.', query: 'SELECT COUNT(*) AS total FROM peliculas;', hint: 'Usa COUNT(*) y pon el nombre total con AS.', orderMatters: true },
-    ]
-  },
-  {
-    id: 'group', title: 'GROUP BY', subtitle: 'Compara categorías', icon: '▦',
-    steps: [
-      { type: 'teoria', title: 'Resume por grupo', text: 'GROUP BY reúne filas con el mismo valor para resumir cada grupo.', code: 'SELECT genero, COUNT(*) AS total\nFROM peliculas\nGROUP BY genero;' },
-      { type: 'quiz', title: 'Una fila por género', question: '¿Qué cláusula crea un resumen para cada género?', options: ['GROUP BY genero', 'ORDER BY genero', 'WHERE genero'], answer: 0 },
-      { type: 'reto', title: 'Cuenta por género', prompt: 'Muestra cada género y cuántas películas tiene. Usa la columna total.', query: 'SELECT genero, COUNT(*) AS total FROM peliculas GROUP BY genero;', hint: 'Selecciona genero y COUNT(*), y agrupa por genero.', orderMatters: false },
-    ]
-  },
-  {
-    id: 'join', title: 'JOIN', subtitle: 'Conecta dos tablas', icon: '⛓',
-    steps: [
-      { type: 'teoria', title: 'Une información', text: 'JOIN combina tablas relacionadas. ON explica qué columnas coinciden.', code: 'SELECT peliculas.titulo, directores.pais\nFROM peliculas\nJOIN directores ON peliculas.director = directores.nombre;' },
-      { type: 'quiz', title: 'La relación correcta', question: '¿Qué columnas conectan estas dos tablas?', options: ['peliculas.anio = directores.pais', 'peliculas.director = directores.nombre', 'peliculas.genero = directores.nombre'], answer: 1 },
-      { type: 'reto', title: 'Conoce a cada director', prompt: 'Muestra el título de cada película y el país de su director.', query: 'SELECT peliculas.titulo, directores.pais FROM peliculas JOIN directores ON peliculas.director = directores.nombre;', hint: 'Une por peliculas.director = directores.nombre y elige titulo y pais.', orderMatters: false },
-    ]
-  },
+export const units = [
+  { title: 'Consultar datos', subtitle: 'Lee tablas, columnas y filas', icon: '▤', lessons: [
+    ['select','SELECT básico','Elige qué columnas quieres ver','SELECT devuelve columnas de una tabla. FROM indica de dónde leer los datos.','SELECT titulo, anio\nFROM peliculas;','¿Qué palabra indica de qué tabla leer?',['WHERE','FROM','ORDER BY'],1,'Muestra el título y género de todas las películas.','SELECT titulo, genero FROM peliculas;','Elige titulo y genero con SELECT; consulta peliculas con FROM.',false],
+    ['columns','Elegir columnas','Proyecta solo los datos útiles','Puedes listar columnas separadas por comas. Usa * para verlas todas.','SELECT titulo\nFROM peliculas;','¿Cómo seleccionas dos columnas?',['titulo genero','titulo, genero','titulo + genero'],1,'Muestra solo título y año.','SELECT titulo, anio FROM peliculas;','Escribe ambas columnas separadas por coma.',false],
+    ['where','WHERE','Filtra las filas que necesitas','WHERE conserva solo las filas que cumplen la condición.','SELECT titulo\nFROM peliculas\nWHERE genero = \'Drama\';','¿Qué cláusula filtra filas?',['FROM','WHERE','AS'],1,'Busca títulos de películas de Drama.','SELECT titulo FROM peliculas WHERE genero = \'Drama\';','Filtra la columna genero con el valor Drama.',false],
+    ['order','ORDER BY y LIMIT','Ordena y acota los resultados','ASC va de menor a mayor; DESC va de mayor a menor. LIMIT limita filas.','SELECT titulo, anio\nFROM peliculas\nORDER BY anio DESC\nLIMIT 3;','¿Qué dirección va de mayor a menor?',['ASC','DESC','LIMIT'],1,'Obtén la película más cara por recaudación.','SELECT titulo FROM peliculas ORDER BY recaudacion DESC, id ASC LIMIT 1;','Ordena recaudacion con DESC y limita a una fila.',true],
+  ]},
+  { title: 'Filtros', subtitle: 'Expresa búsquedas precisas', icon: '⌕', lessons: [
+    ['logic','AND, OR y NOT','Combina condiciones','AND exige todas las condiciones; OR acepta alguna; NOT niega una condición.','SELECT nombre FROM productos\nWHERE precio < 10 AND stock > 0;','¿Qué operador exige que se cumplan ambas condiciones?',['OR','AND','NOT'],1,'Busca películas de Drama estrenadas desde 2010.','SELECT titulo FROM peliculas WHERE genero = \'Drama\' AND anio >= 2010;','Combina genero = Drama y anio >= 2010 con AND.',false],
+    ['in-between','IN y BETWEEN','Busca dentro de listas y rangos','IN compara con una lista. BETWEEN incluye ambos extremos del rango.','SELECT nombre FROM productos\nWHERE id IN (1, 3);','¿Qué cláusula comprueba si un valor está en una lista?',['IN','LIKE','IS NULL'],0,'Busca películas estrenadas entre 2000 y 2010 inclusive.','SELECT titulo FROM peliculas WHERE anio BETWEEN 2000 AND 2010;','Usa BETWEEN 2000 AND 2010 sobre anio.',false],
+    ['like','LIKE','Encuentra patrones de texto','% representa cero o más caracteres; _ representa exactamente uno.','SELECT nombre FROM productos\nWHERE nombre LIKE \'P%\';','¿Qué comodín representa cualquier cantidad de caracteres?',['_','%','*'],1,'Busca directores cuyo nombre empieza con F.','SELECT nombre FROM directores WHERE nombre LIKE \'F%\';','LIKE compara con el patrón F%.',false],
+    ['null','NULL y datos ausentes','Comprueba valores que faltan','NULL representa ausencia o desconocimiento. Usa IS NULL; no se compara con =.','SELECT nombre FROM productos\nWHERE categoria_id IS NULL;','¿Cómo buscas un valor ausente?',['= NULL','IS NULL','NOT NULL'],1,'Muestra películas sin recaudación registrada.','SELECT titulo FROM peliculas WHERE recaudacion IS NULL;','Usa IS NULL en la columna recaudacion.',false],
+  ]},
+  { title: 'Agregaciones', subtitle: 'Resume grupos de registros', icon: '∑', lessons: [
+    ['count','COUNT','Cuenta registros','COUNT(*) cuenta filas; COUNT(columna) cuenta valores que no son NULL.','SELECT COUNT(*) AS total\nFROM peliculas;','¿Qué función cuenta todas las filas?',['SUM(*)','COUNT(*)','AVG(*)'],1,'Devuelve cuántas películas hay, con el alias total.','SELECT COUNT(*) AS total FROM peliculas;','Usa COUNT(*) AS total.',true],
+    ['sum-avg','SUM y AVG','Suma y calcula promedios','SUM suma valores y AVG calcula su promedio. MIN y MAX obtienen extremos.','SELECT AVG(recaudacion)\nFROM peliculas;','¿Qué función calcula el promedio?',['SUM','AVG','COUNT'],1,'Devuelve la recaudación total como total.','SELECT SUM(recaudacion) AS total FROM peliculas;','Aplica SUM a recaudacion y nómbrala total.',true],
+    ['group','GROUP BY','Resume cada categoría','GROUP BY reúne filas con el mismo valor para agregar cada grupo.','SELECT genero, COUNT(*) AS total\nFROM peliculas\nGROUP BY genero;','¿Qué cláusula agrupa filas antes de resumirlas?',['WHERE','GROUP BY','ORDER BY'],1,'Muestra cada género y el número de películas.','SELECT genero, COUNT(*) AS total FROM peliculas GROUP BY genero;','Selecciona genero y COUNT(*); agrupa por genero.',false],
+    ['having','HAVING','Filtra grupos resumidos','WHERE filtra filas antes de agrupar; HAVING filtra grupos después.','SELECT genero, COUNT(*) AS total\nFROM peliculas\nGROUP BY genero\nHAVING COUNT(*) >= 2;','¿Qué cláusula filtra resultados agregados?',['WHERE','HAVING','LIMIT'],1,'Muestra los géneros con al menos dos películas.','SELECT genero, COUNT(*) AS total FROM peliculas GROUP BY genero HAVING COUNT(*) >= 2;','Agrupa por genero y filtra el COUNT con HAVING.',false],
+  ]},
+  { title: 'Modificar datos', subtitle: 'Escribe cambios deliberados', icon: '✎', lessons: [
+    ['insert','INSERT','Añade filas nuevas','INSERT INTO crea una fila y VALUES aporta los datos nuevos.','INSERT INTO productos (id, nombre, precio)\nVALUES (4, \'Té\', 6);','¿Qué comando añade filas?',['UPDATE','INSERT','DELETE'],1,'Añade una película titulada Prueba (año 2020) a una tabla temporal.','CREATE TABLE practica (titulo TEXT, anio INTEGER); INSERT INTO practica VALUES (\'Prueba\', 2020); SELECT * FROM practica;','La base se crea de nuevo para cada reto. Crea practica y añade la fila.',true],
+    ['update','UPDATE','Cambia filas existentes','UPDATE cambia valores con SET. Usa WHERE para limitar qué filas modifica.','UPDATE productos SET stock = 9\nWHERE id = 1;','¿Qué parte asigna los nuevos valores?',['SET','FROM','VALUES'],0,'En una tabla temporal, cambia el año de la fila con titulo Demo a 2021.','CREATE TABLE practica (titulo TEXT, anio INTEGER); INSERT INTO practica VALUES (\'Demo\', 2000); UPDATE practica SET anio = 2021 WHERE titulo = \'Demo\'; SELECT anio FROM practica;','Crea una tabla temporal, inserta la fila, luego UPDATE con WHERE.',true],
+    ['delete','DELETE','Elimina solo lo que seleccionas','DELETE FROM elimina filas. Sin WHERE, puede borrar todas las filas de la tabla.','DELETE FROM productos\nWHERE id = 3;','¿Qué limita las filas que se borran?',['ORDER BY','WHERE','GROUP BY'],1,'En una tabla temporal, borra la fila con titulo Demo y devuelve lo que queda.','CREATE TABLE practica (titulo TEXT); INSERT INTO practica VALUES (\'Demo\'); DELETE FROM practica WHERE titulo = \'Demo\'; SELECT * FROM practica;','Usa DELETE FROM practica WHERE titulo = Demo.',true],
+    ['transactions','Transacciones','Confirma o revierte cambios','BEGIN inicia; COMMIT confirma; ROLLBACK revierte cambios pendientes.','BEGIN;\nUPDATE productos SET stock = 0 WHERE id = 1;\nROLLBACK;','¿Qué instrucción revierte cambios pendientes?',['COMMIT','ROLLBACK','SAVE'],1,'Inicia una transacción, crea una tabla temporal y revierte; después devuelve una confirmación con SELECT.','BEGIN; CREATE TABLE practica (id INTEGER); ROLLBACK; SELECT 1 AS confirmado;','Ejecuta BEGIN, crea practica, ROLLBACK y termina con SELECT 1 AS confirmado.',true],
+  ]},
+  { title: 'Diseñar tablas', subtitle: 'Modela datos con integridad', icon: '▦', lessons: [
+    ['create','CREATE TABLE','Define la estructura de una tabla','Una tabla define columnas y tipos para guardar datos.','CREATE TABLE clientes (\nid INTEGER,\nnombre TEXT\n);','¿Qué comando define una tabla?',['CREATE TABLE','INSERT INTO','SELECT'],0,'Crea una tabla temporal clientes con id y nombre y consulta su esquema.','CREATE TABLE clientes (id INTEGER, nombre TEXT); PRAGMA table_info(clientes);','Define las columnas y usa PRAGMA table_info para comprobarlas.',false],
+    ['primary','Clave primaria','Identifica cada fila','PRIMARY KEY identifica filas de manera única.','CREATE TABLE clientes (\nid INTEGER PRIMARY KEY,\nnombre TEXT\n);','¿Qué restricción identifica una fila de manera única?',['FOREIGN KEY','PRIMARY KEY','NOT NULL'],1,'Crea una tabla temporal con id como llave primaria y consulta su esquema.','CREATE TABLE clientes (id INTEGER PRIMARY KEY, nombre TEXT); PRAGMA table_info(clientes);','Declara id INTEGER PRIMARY KEY.',false],
+    ['foreign','Claves foráneas','Relaciona tablas con reglas','REFERENCES indica la tabla y columna a la que apunta una clave foránea.','CREATE TABLE pedidos (\ncliente_id INTEGER REFERENCES clientes(id)\n);','¿Qué palabra declara una referencia a otra tabla?',['REFERENCES','VALUES','HAVING'],0,'Crea clientes y pedidos, con una clave foránea pedidos.cliente_id → clientes.id; devuelve el esquema de pedidos.','PRAGMA foreign_keys = ON; CREATE TABLE clientes (id INTEGER PRIMARY KEY); CREATE TABLE pedidos (id INTEGER PRIMARY KEY, cliente_id INTEGER REFERENCES clientes(id)); PRAGMA table_info(pedidos);','Declara REFERENCES clientes(id) en cliente_id.',false],
+    ['constraints','Restricciones','Valida valores antes de guardarlos','NOT NULL exige valor; UNIQUE evita duplicados; CHECK comprueba una condición.','CREATE TABLE clientes (\nnombre TEXT NOT NULL\n);','¿Qué restricción exige un valor?',['NOT NULL','UNIQUE','DEFAULT'],0,'Crea clientes con id primario y nombre obligatorio; consulta su esquema.','CREATE TABLE clientes (id INTEGER PRIMARY KEY, nombre TEXT NOT NULL); PRAGMA table_info(clientes);','Usa PRIMARY KEY y NOT NULL.',false],
+  ]},
+  { title: 'Relaciones y JOIN', subtitle: 'Combina tablas relacionadas', icon: '⛓', lessons: [
+    ['relations','Relaciones y alias','Conecta claves entre tablas','Los alias abrevían tablas. ON indica qué claves deben coincidir.','SELECT p.nombre, c.nombre\nFROM productos p\nJOIN categorias c ON p.categoria_id = c.id;','¿Qué cláusula define cómo se relacionan las tablas?',['ON','WHERE','LIMIT'],0,'Muestra producto y categoría usando alias.','SELECT p.nombre, c.nombre FROM productos p JOIN categorias c ON p.categoria_id = c.id;','Une categoria_id con id y usa alias p y c.',false],
+    ['inner','INNER JOIN','Conserva coincidencias','INNER JOIN devuelve filas que tienen coincidencia en ambos lados.','SELECT p.nombre\nFROM productos p\nINNER JOIN categorias c ON p.categoria_id = c.id;','¿Qué unión conserva solo coincidencias?',['LEFT JOIN','INNER JOIN','CROSS JOIN'],1,'Muestra nombre de producto y categoría solo cuando hay coincidencia.','SELECT p.nombre, c.nombre FROM productos p INNER JOIN categorias c ON p.categoria_id = c.id;','Usa INNER JOIN con la condición de clave.',false],
+    ['left','LEFT JOIN','Conserva todas las filas izquierdas','LEFT JOIN conserva cada fila de la tabla izquierda. Si falta pareja, los valores derechos quedan NULL.','SELECT p.nombre, c.nombre\nFROM productos p\nLEFT JOIN categorias c ON p.categoria_id = c.id;','¿Qué unión conserva todas las filas de la izquierda?',['INNER JOIN','LEFT JOIN','RIGHT JOIN'],1,'Conserva todos los productos aunque su categoría no coincida.','SELECT p.nombre, c.nombre FROM productos p LEFT JOIN categorias c ON p.categoria_id = c.id;','FROM productos y LEFT JOIN categorias por sus claves.',false],
+    ['multi-join','Varias relaciones','Une más de dos tablas','Puedes encadenar JOIN si cada relación tiene una condición ON clara.','SELECT v.cantidad, p.nombre, c.nombre\nFROM ventas v\nJOIN productos p ON v.producto_id = p.id\nJOIN categorias c ON p.categoria_id = c.id;','¿Qué condición conecta ventas con productos?',['v.producto_id = p.id','v.id = c.id','v.cantidad = p.precio'],0,'Muestra la cantidad vendida, el producto y su categoría.','SELECT v.cantidad, p.nombre, c.nombre FROM ventas v JOIN productos p ON v.producto_id = p.id JOIN categorias c ON p.categoria_id = c.id;','Encadena ventas→productos→categorias.',false],
+  ]},
+  { title: 'Consultas avanzadas', subtitle: 'Compón y reutiliza consultas', icon: '⌘', lessons: [
+    ['subquery','Subconsultas','Usa una consulta como parte de otra','Una subconsulta escalar puede calcular un valor para compararlo en la consulta externa.','SELECT nombre FROM productos\nWHERE precio > (SELECT AVG(precio) FROM productos);','¿Dónde aparece una subconsulta?',['Dentro de otra consulta','Después del punto y coma','En un comentario'],0,'Busca películas con recaudación mayor al promedio.','SELECT titulo FROM peliculas WHERE recaudacion > (SELECT AVG(recaudacion) FROM peliculas);','Compara recaudacion con una subconsulta AVG.',false],
+    ['aliases','Alias y expresiones','Calcula y nombra columnas','AS asigna un nombre al resultado sin cambiar el dato guardado.','SELECT precio * 2 AS doble\nFROM productos;','¿Qué palabra asigna un alias?',['AS','IN','ON'],0,'Muestra título y año de estreno, más el año siguiente llamado siguiente.','SELECT titulo, anio + 1 AS siguiente FROM peliculas;','Usa la expresión anio + 1 AS siguiente.',false],
+    ['indexes','Índices','Comprende búsquedas más eficientes','Los índices pueden acelerar ciertas búsquedas, a cambio de espacio y costo de escritura.','CREATE INDEX idx_nombre\nON productos(nombre);','¿Qué estructura puede acelerar búsquedas por nombre?',['VIEW','INDEX','JOIN'],1,'Crea un índice temporal por año y confirma que existe.','CREATE INDEX idx_peliculas_anio ON peliculas(anio); SELECT name FROM sqlite_master WHERE type = \'index\' AND name = \'idx_peliculas_anio\';','Usa CREATE INDEX y consulta sqlite_master.',false],
+    ['views','Vistas','Reutiliza una consulta con nombre','Una vista guarda la definición de una consulta y se comporta como una tabla consultable.','CREATE VIEW disponibles AS\nSELECT id, nombre FROM productos WHERE stock > 0;','¿Qué guarda una vista?',['Una definición de consulta','Una copia obligatoria de todos los datos','Un índice único'],0,'Define una vista de películas estrenadas desde 2010 y consulta sus títulos.','CREATE VIEW recientes AS SELECT titulo FROM peliculas WHERE anio >= 2010; SELECT titulo FROM recientes;','Crea una vista recientes y después selecciónala.',false],
+  ]},
 ];
+
+const emojis = ['🌱','🧭','⚡','🛠️','🏗️','🔗','🚀'];
+export const lessons = units.flatMap((unit, unitIndex) => unit.lessons.map((row, lessonIndex) => ({
+  id: row[0], title: row[1], subtitle: row[2], icon: lessonIndex === 3 ? '✦' : emojis[unitIndex], unit: unitIndex, lessonNumber: lessonIndex + 1,
+  steps: [
+    { type: 'teoria', title: row[1], text: row[3], code: row[4] },
+    { type: 'quiz', title: 'Comprueba lo que sabes', question: row[5], options: row[6], answer: row[7] },
+    { type: 'reto', title: `Práctica: ${row[1]}`, prompt: row[8], query: row[9], hint: row[10], orderMatters: row[11] },
+  ]
+})));
