@@ -8,10 +8,11 @@ const makeLesson = ([id,title,subtitle,text,code,question,options,answer,prompt,
 
 export const courses = [
   {
-    id:'sql',name:'SQL',icon:'▤',description:'Consulta, organiza y relaciona datos.',
+    id:'sql',name:'SQL y PostgreSQL',icon:'▤',track:'career',description:'Aprende el lenguaje SQL y luego opera PostgreSQL.',
+    resources:[{label:'SQLite: SELECT y consultas',url:'https://www.sqlite.org/lang_select.html'},{label:'PostgreSQL: índices',url:'https://www.postgresql.org/docs/current/indexes.html'},{label:'PostgreSQL: respaldos y restauración',url:'https://www.postgresql.org/docs/current/backup.html'},{label:'PostgreSQL: pg_dump',url:'https://www.postgresql.org/docs/current/app-pgdump.html'}],
     units:[
       {title:'Primeras consultas',subtitle:'Lee tablas, columnas y filas',icon:'▤',lessons:[
-        ['sql-select','SELECT básico','Lee columnas de una tabla.','SELECT indica qué columnas quieres ver; FROM indica de qué tabla vienen.','SELECT titulo, anio\nFROM peliculas;','¿Qué palabra indica la tabla?',['WHERE','FROM','ORDER BY'],1,'Muestra los títulos de películas.','SELECT titulo FROM peliculas;','Elige la columna titulo y usa FROM peliculas.'],
+        ['sql-select','SELECT básico','Lee columnas de una tabla.','SQL es el lenguaje de consulta; PostgreSQL es un sistema de bases de datos que lo implementa. Aquí practicas consultas con una base local SQLite y después aplicarás SQL y aprenderás operación de PostgreSQL. SELECT indica las columnas y FROM la tabla.','SELECT titulo, anio\nFROM peliculas;','¿Qué palabra indica la tabla?',['WHERE','FROM','ORDER BY'],1,'Muestra los títulos de películas.','SELECT titulo FROM peliculas;','Elige la columna titulo y usa FROM peliculas.'],
         ['sql-columns','Elegir columnas','Proyecta solo los datos útiles','Puedes listar varias columnas separándolas con comas.','SELECT titulo, genero\nFROM peliculas;','¿Cómo separas dos columnas?',['Con coma','Con +','Con AND'],0,'Muestra título y género.','SELECT titulo, genero FROM peliculas;','Separa titulo y genero con una coma.'],
         ['sql-where','WHERE','Filtra las filas que necesitas','WHERE conserva filas que cumplen una condición.','SELECT titulo FROM peliculas\nWHERE genero = \'Drama\';','¿Qué cláusula filtra filas?',['FROM','WHERE','AS'],1,'Busca películas de Drama.','SELECT titulo FROM peliculas WHERE genero = \'Drama\';','Compara genero con el texto Drama.'],
         ['sql-order','ORDER BY y LIMIT','Ordena y acota resultados','ASC va de menor a mayor, DESC de mayor a menor; LIMIT limita cuántas filas aparecen.','SELECT titulo, anio FROM peliculas\nORDER BY anio DESC LIMIT 3;','¿Qué dirección ordena de mayor a menor?',['ASC','DESC','LIMIT'],1,'Muestra la película más reciente.','SELECT titulo FROM peliculas ORDER BY anio DESC, id ASC LIMIT 1;','Ordena anio con DESC y deja una fila.'],
@@ -125,7 +126,7 @@ export const courses = [
     ],
   },
   {
-    id:'linux',name:'Linux para soporte',icon:'$ _',description:'Terminal, archivos, permisos, procesos y logs.',
+    id:'linux',name:'Linux para soporte',icon:'$ _',track:'career',description:'Terminal, archivos, permisos, procesos y logs.',
     resources:[{label:'GNU Coreutils: archivos y permisos',url:'https://www.gnu.org/software/coreutils/manual/'},{label:'Manual Linux: procesos ps',url:'https://man7.org/linux/man-pages/man1/ps.1.html'},{label:'Manual Linux: grep',url:'https://man7.org/linux/man-pages/man1/grep.1.html'}],
     units:[
       {title:'Muévete por Linux',subtitle:'Terminal, rutas y archivos',icon:'01',lessons:[
@@ -155,7 +156,7 @@ export const courses = [
     ],
   },
   {
-    id:'postgres',name:'PostgreSQL y operación SQL',icon:'PG',description:'JOIN, índices, clientes, respaldos y restauración.',
+    id:'postgres',name:'PostgreSQL y operación SQL',icon:'PG',track:'career',description:'JOIN, índices, clientes, respaldos y restauración.',
     resources:[{label:'PostgreSQL: índices',url:'https://www.postgresql.org/docs/current/indexes.html'},{label:'PostgreSQL: respaldos y restauración',url:'https://www.postgresql.org/docs/current/backup.html'},{label:'PostgreSQL: pg_dump',url:'https://www.postgresql.org/docs/current/app-pgdump.html'}],
     units:[
       {title:'Consultas de trabajo',subtitle:'Une y resume información',icon:'01',lessons:[
@@ -185,7 +186,7 @@ export const courses = [
     ],
   },
   {
-    id:'docker',name:'Docker y Compose',icon:'▣',description:'Imágenes, contenedores, volúmenes y aplicaciones.',
+    id:'docker',name:'Docker y Compose',icon:'▣',track:'career',description:'Imágenes, contenedores, volúmenes y aplicaciones.',
     resources:[{label:'Docker: primeros pasos con Compose',url:'https://docs.docker.com/compose/gettingstarted/'},{label:'Docker: ruta para aprender contenedores',url:'https://docs.docker.com/learn/paths/get-started-with-docker-containers/'}],
     units:[
       {title:'Contenedores desde cero',subtitle:'Empaqueta y ejecuta servicios',icon:'01',lessons:[
@@ -215,7 +216,7 @@ export const courses = [
     ],
   },
   {
-    id:'network-cloud',name:'Redes y nube',icon:'↗',description:'IP, puertos, TCP/IP, SSH y máquinas virtuales.',
+    id:'network-cloud',name:'Redes y nube',icon:'↗',track:'career',description:'IP, puertos, TCP/IP, SSH y máquinas virtuales.',
     resources:[{label:'AWS: reglas de grupos de seguridad',url:'https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-rules-reference.html'},{label:'AWS: conectarse a una VM Linux',url:'https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/TroubleshootingInstancesConnecting.html'}],
     units:[
       {title:'Redes fundamentales',subtitle:'Entiende cómo llegan los paquetes',icon:'01',lessons:[
@@ -245,7 +246,7 @@ export const courses = [
     ],
   },
   {
-    id:'portfolio-lab',name:'Proyecto integrador',icon:'★',description:'PostgreSQL + Docker + Linux + respaldo y portafolio.',
+    id:'portfolio-lab',name:'Proyecto de portafolio',icon:'★',track:'career',description:'PostgreSQL + Docker + Linux + respaldo y portafolio.',
     resources:[{label:'Docker: Compose con servicios y volúmenes',url:'https://docs.docker.com/compose/gettingstarted/'},{label:'PostgreSQL: respaldo y recuperación',url:'https://www.postgresql.org/docs/current/backup.html'}],
     units:[
       {title:'Laboratorio para portafolio',subtitle:'Integra los cuatro temas sin contratar nube',icon:'01',lessons:[
@@ -300,6 +301,23 @@ export const courses = [
   },
 ];
 
+// SQL es el lenguaje; PostgreSQL es el sistema donde también practicamos su operación.
+// Se reúnen en una ruta. Las lecciones de administración conservan sus IDs de progreso
+// y usan práctica guiada porque esta PWA no ejecuta comandos reales de PostgreSQL.
+const postgresCourseIndex=courses.findIndex(course=>course.id==='postgres');
+if(postgresCourseIndex>=0){
+  const [postgresCourse]=courses.splice(postgresCourseIndex,1);
+  const sqlCourse=courses.find(course=>course.id==='sql');
+  const units=postgresCourse.units.map((unit,index)=>({
+    ...unit,
+    title:['Consultas en PostgreSQL','Rendimiento y transacciones','Administración y cliente gráfico','Respaldos y recuperación'][index]||unit.title,
+    subtitle:['Aplica SQL en un motor de bases de datos real','Observa planes y cuida la integridad','Conecta y opera con cuidado','Protege datos y verifica restauraciones'][index]||unit.subtitle,
+    icon:String(index+8).padStart(2,'0'),
+    practiceMode:'guided',
+  }));
+  if(sqlCourse)sqlCourse.units.push(...units);
+}
+
 export const languages = courses;
 export let activeCourseId = 'sql';
 export function selectCourse(id) {
@@ -309,7 +327,7 @@ export function getActiveCourse() { return courses.find(course => course.id === 
 export function getCourseLessons(courseId=activeCourseId) {
   const course=courses.find(item=>item.id===courseId) || courses[0];
   return course.units.flatMap((unit,unitIndex)=>unit.lessons.map((row,lessonIndex)=>({
-    ...makeLesson(row),unit:unitIndex,lessonNumber:lessonIndex+1,courseId:course.id,
+    ...makeLesson(row),unit:unitIndex,lessonNumber:lessonIndex+1,courseId:course.id,practiceMode:unit.practiceMode||null,
   })));
 }
 export function getCourseUnits(courseId=activeCourseId) {
