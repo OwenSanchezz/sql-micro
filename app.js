@@ -139,7 +139,7 @@ function loseHeart() {
 function handleAction(step) {
   if(step.type==='teoria'){advance();return;}
   if(step.type==='quiz'){
-    if(lockedAnswer&&selectedOption===step.answer){earned+=10;correct++;saved.xp+=10;persist();advance();return;}
+    if(lockedAnswer&&selectedOption===step.answer){advance();return;}
     if(selectedOption===null)return;
     lockedAnswer=true;
     if(selectedOption===step.answer){feedback='¡Correcto! +10 XP';earned+=10;correct++;saved.xp+=10;persist();}

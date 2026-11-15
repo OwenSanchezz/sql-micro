@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sql-paso-a-paso-v3';
+const CACHE_NAME = 'sql-paso-a-paso-v4';
 const APP_FILES = [
   './', './index.html', './styles.css', './app.js', './lessons.js',
   './manifest.json', './icons/icon-180.png', './icons/icon-192.png',
