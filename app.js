@@ -164,7 +164,7 @@ function renderSplash() {
   splashShown=true;
   const splash=document.querySelector('#splash');
   splash.hidden=false;
-  document.querySelector('#enter-app').onclick=()=>{audioUnlocked=true;playSfx('open');splash.classList.add('splash-exit');setTimeout(()=>splash.remove(),450);};
+  window.setTimeout(()=>{splash.classList.add('splash-exit');window.setTimeout(()=>splash.remove(),450);},1500);
 }
 
 function renderPractice() {
@@ -202,7 +202,7 @@ function startLesson(index,practice=false) {
 function showLessonEntry({first=false,practice=false}={}) {
   const overlay = document.createElement('div');
   overlay.className = first?'splash-screen intro-overlay':'intro-overlay';
-  overlay.innerHTML = first?`<img class="splash-art" src="./assets/codequet/quet-reference.png" alt="CodeQuet y Quet"><span>Vamos a aprender SQL juntos</span><div class="intro-video-wrap"><video class="intro-video" playsinline autoplay ${audioUnlocked?'':'muted'} poster="./assets/codequet/lesson-entry-poster.jpg"><source src="./assets/codequet/lesson-entry.mp4" type="video/mp4"></video></div><button class="intro-sound">🔊 Activar sonido</button><button class="intro-skip">Entrar al ejercicio</button>`:`<div class="lesson-intro-art"><img src="./assets/codequet/quet-banner.png" alt="Quet"><span>${practice?'¡Practiquemos de nuevo!':'¡Vamos con todo!'}</span></div><div class="intro-video-wrap"><video class="intro-video" playsinline autoplay ${audioUnlocked?'':'muted'} poster="./assets/codequet/lesson-entry-poster.jpg"><source src="./assets/codequet/lesson-entry.mp4" type="video/mp4"></video></div><div class="intro-controls"><strong>¡Hola, soy Quet!</strong><span>${esc(lessons[lessonIndex].title)} · Vamos a aprender juntos.</span><button class="intro-sound">${audioUnlocked?'🔊 Sonido activado':'🔊 Activar sonido'}</button><button class="intro-skip">Empezar</button></div>`;
+  overlay.innerHTML = first?`<video class="intro-video intro-video-full" playsinline autoplay muted poster="./assets/codequet/lesson-entry-poster.jpg"><source src="./assets/codequet/lesson-entry.mp4" type="video/mp4"></video>`:`<div class="lesson-intro-art"><img src="./assets/codequet/quet-banner.png" alt="Quet"><span>${practice?'¡Practiquemos de nuevo!':'¡Vamos con todo!'}</span></div><div class="intro-video-wrap"><video class="intro-video" playsinline autoplay ${audioUnlocked?'':'muted'} poster="./assets/codequet/lesson-entry-poster.jpg"><source src="./assets/codequet/lesson-entry.mp4" type="video/mp4"></video></div><div class="intro-controls"><strong>¡Hola, soy Quet!</strong><span>${esc(lessons[lessonIndex].title)} · Vamos a aprender juntos.</span><button class="intro-sound">${audioUnlocked?'🔊 Sonido activado':'🔊 Activar sonido'}</button><button class="intro-skip">Empezar</button></div>`;
   document.body.append(overlay);
   const close = () => {overlay.classList.add('intro-exit');setTimeout(()=>overlay.remove(),320);if(first){saved.introSeen=true;persist();}};
   const video = overlay.querySelector('video');
