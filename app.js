@@ -154,8 +154,13 @@ function renderBottomNav(active=currentTab) {
   currentTab=active;
   if (mode==='lesson'||mode==='exam'||mode==='summary'||mode==='defeat') { bottomNav.hidden=true; return; }
   bottomNav.hidden=false;
-  const tabs=[['aprender','Aprender','⌂'],['practicar','Practicar','✎'],['juegos','Juegos','♟'],['perfil','Perfil','☺']];
-  bottomNav.innerHTML=tabs.map(([id,label,icon])=>`<button class="nav-tab ${active===id?'active':''}" data-tab="${id}" aria-label="${label}"><span>${icon}</span><small>${label}</small></button>`).join('');
+  const tabs=[
+    ['aprender','Aprender','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3l8.5 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-5v-6h-4v6h-5A1.5 1.5 0 0 1 3.5 19.5z"/></svg>'],
+    ['practicar','Practicar','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16.8-.8 4 4-.8L19 8.2 15.8 5zM14.5 6.3l3.2 3.2M4 4h7M4 8h5"/></svg>'],
+    ['juegos','Juegos','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 8h9a4.5 4.5 0 0 1 4.3 5.8l-1.1 3.6a2 2 0 0 1-3.2 1L13.8 16h-3.6l-2.7 2.4a2 2 0 0 1-3.2-1l-1.1-3.6A4.5 4.5 0 0 1 7.5 8Z"/><path d="M7 11v4m-2-2h4m7-1h.01M18 14h.01"/></svg>'],
+    ['perfil','Perfil','<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>'],
+  ];
+  bottomNav.innerHTML=tabs.map(([id,label,icon])=>`<button class="nav-tab ${active===id?'active':''}" data-tab="${id}" aria-label="${label}"><span class="nav-icon">${icon}</span><small>${label}</small></button>`).join('');
   bottomNav.querySelectorAll('[data-tab]').forEach(button=>button.addEventListener('click',()=>{playSfx();const tab=button.dataset.tab;if(tab==='aprender')renderHome();else if(tab==='practicar')renderPractice();else if(tab==='juegos')renderGames();else renderProfile();}));
 }
 

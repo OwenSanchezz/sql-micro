@@ -11,3 +11,14 @@
 .splash-exit{opacity:0;transition:opacity .32s ease;pointer-events:none}
 .intro-overlay.splash-screen{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;min-height:0;max-width:none;margin:0;padding:0;display:block;overflow:hidden;background:#000;z-index:40}
 .intro-overlay.splash-screen .intro-video-full{position:absolute;inset:0;display:block;width:100%;height:100%;max-width:none;max-height:none;margin:0;object-fit:cover;object-position:center;background:#000;opacity:1}
+
+/* Floating island navigation, with CodeQuet line icons instead of emoji glyphs. */
+.app-shell{padding-bottom:calc(104px + var(--safe-bottom))}
+.bottom-nav{left:50%;right:auto;bottom:calc(12px + var(--safe-bottom));transform:translateX(-50%);width:min(calc(100% - 28px),460px);padding:9px 10px;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;background:linear-gradient(180deg,#1b3045f5,#132235f5);border:1px solid #477294;border-radius:27px;box-shadow:0 12px 34px #06111dcc,0 0 0 1px #d7f2ff0d inset;backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)}
+.nav-tab{min-height:62px;gap:4px;border-radius:20px;color:#a8c1d6;transition:background .18s ease,color .18s ease,transform .18s ease}
+.nav-tab:active{transform:scale(.96)}
+.nav-icon{width:28px;height:28px;display:grid;place-items:center;color:currentColor}
+.nav-icon svg{display:block;width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav-tab small{font-size:10px;letter-spacing:.01em}
+.nav-tab.active{background:linear-gradient(180deg,#225274,#1a3e5c);color:#8ed6ff;box-shadow:0 2px 9px #06111d77,inset 0 0 0 1px #6fbbec36}
+@media(min-width:620px){.bottom-nav{left:50%;right:auto;bottom:14px;width:min(calc(100% - 32px),460px);border-radius:27px}}
