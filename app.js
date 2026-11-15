@@ -1,4 +1,4 @@
-import { lessons } from './lessons.js';
+import { lessons, units } from './lessons.js';
 
 const STORE_KEY = 'sql-paso-a-paso-v1';
 const screen = document.querySelector('#screen');
