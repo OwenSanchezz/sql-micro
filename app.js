@@ -187,12 +187,12 @@ function renderDefeat() {
 
 async function boot() {
   renderHome();
+  if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(registration=>registration.update()).catch(error=>console.warn('Service Worker no disponible:',error));}
   if(!window.initSqlJs){screen.insertAdjacentHTML('afterbegin','<p class="error-message">No se encontró SQL.js local. Revisa que /vendor/sql-wasm.js esté disponible.</p>');return;}
   try {
     SQLModule = await window.initSqlJs({locateFile:file=>new URL(`./vendor/${file}`,import.meta.url).href});
     if (!SQLModule || typeof SQLModule.Database !== 'function') throw new Error('SQL.js no devolvió la interfaz esperada.');
   }
   catch(error){console.error('No se pudo iniciar SQLite:',error);screen.insertAdjacentHTML('afterbegin','<p class="error-message">No se pudo cargar el motor SQL local. Comprueba que el archivo WASM esté instalado.</p>');}
-  if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(error=>console.warn('Service Worker no disponible:',error));}
 }
 boot();
