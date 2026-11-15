@@ -60,3 +60,14 @@
 @keyframes path-bob{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-5px) scale(1.045)}}
 @media(max-width:370px){.lesson-list{column-gap:4px}.path-node{grid-template-columns:50px minmax(0,1fr);gap:6px;padding:4px}.path-node .lesson-icon{width:50px;height:50px}.path-node .lesson-title{font-size:11px}}
 @media(prefers-reduced-motion:reduce){.path-node.is-current .lesson-icon{animation:none}}
+.career-roadmap{margin:12px 0 18px;padding:12px 14px;border:1px solid #315977;border-left:4px solid #5cbcff;border-radius:14px;background:#152b40}
+.course-resources{margin:-6px 0 18px;padding:10px 13px;border:1px solid #304e69;border-radius:14px;background:#13263a}
+.course-resources summary{font-size:12px;font-weight:800;color:#bfe5ff;cursor:pointer}
+.course-resources>div{display:grid;gap:7px;margin-top:10px}
+.course-resources a{font-size:12px;line-height:1.4;color:#89d3ff;text-decoration:underline;text-underline-offset:2px}
+.career-roadmap strong{font-size:13px;color:#c8ebff}
+.career-roadmap p{margin:5px 0;font-size:12px;font-weight:800;line-height:1.5;color:#edf7ff}
+.career-roadmap small,.practice-note{font-size:11px;line-height:1.45;color:#a9c5da}
+.practice-note{margin:10px 0;padding:9px 11px;border-left:3px solid #58b8f1;border-radius:7px;background:#11293c}
+.language-picker{grid-template-columns:1fr}
+@media(min-width:620px){.language-picker{grid-template-columns:repeat(3,minmax(0,1fr))}}
