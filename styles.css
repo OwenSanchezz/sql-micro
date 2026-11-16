@@ -116,3 +116,25 @@
 .lesson-entry-overlay{position:fixed;inset:0;z-index:50;display:block;width:100vw;height:100vh;height:100dvh;min-height:0;max-width:none;margin:0;padding:0;overflow:hidden;background:#000;animation:intro-in .35s ease}
 .lesson-entry-video{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover;object-position:center;background:#000}
 .lesson-entry-overlay.intro-exit{opacity:0;transition:opacity .32s ease}
+.teaching-section,.exercise-brief,.answer-explanation,.solution-review{margin:13px 0;padding:13px 14px;border:1px solid #2f4a63;border-radius:16px;background:#14283b}
+.teaching-label{display:block;margin-bottom:6px;color:#83d1ff;font-size:11px;font-weight:900;letter-spacing:.07em;text-transform:uppercase}
+.teaching-section>p,.answer-explanation>p,.exercise-brief>p,.solution-review>p{margin:5px 0 0;color:#d4e2ef;font-size:14px;line-height:1.65}
+.teaching-section h3,.answer-explanation h3,.solution-review h3{margin:3px 0 9px;font-size:16px;line-height:1.35}
+.example-walkthrough{border-color:#386183;background:linear-gradient(145deg,#162f45,#132538)}
+.code-breakdown{display:grid;gap:9px;margin:10px 0 0;padding:0;list-style:none;counter-reset:code-line}
+.code-breakdown li{display:grid;gap:5px;min-width:0;padding:9px 10px;border-left:3px solid #4ca9e4;border-radius:0 10px 10px 0;background:#0f1e2c;counter-increment:code-line}
+.code-breakdown li::before{content:"Paso " counter(code-line);color:#91c8eb;font-size:10px;font-weight:850;letter-spacing:.05em;text-transform:uppercase}
+.code-breakdown code{display:block;overflow-wrap:anywhere;white-space:pre-wrap;color:#a7deff;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.55}
+.code-breakdown li p{margin:0;color:#c8d8e7;font-size:12px;line-height:1.55}
+.pitfalls-section ul,.exercise-brief ol{display:grid;gap:8px;margin:9px 0 0;padding-left:20px}
+.pitfalls-section li,.exercise-brief li{padding-left:2px;color:#c7d8e8;font-size:12px;line-height:1.55}
+.pitfalls-section li::marker{color:#ffc069}
+.exercise-brief{border-color:#3a6382;background:linear-gradient(145deg,#17344c,#13273a)}
+.answer-explanation{border-color:#398064;background:#14352f}
+.answer-explanation>strong{color:#7ee6bd;font-size:13px}
+.solution-review{border-color:#34775f;background:#12332c}
+.solution-review .eyebrow{display:block;margin:1px 0 8px}
+.solution-review h3{color:#e2fff3}
+.hint-box{margin:11px 0;padding:11px 13px;border-left:3px solid #69bded;border-radius:8px;background:#11293c}
+.hint-box strong{color:#bfe8ff;font-size:12px}
+.hint-box p{margin:4px 0 0;font-size:13px}

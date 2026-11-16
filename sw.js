@@ -1,4 +1,4 @@
-const CACHE_NAME = 'codequet-sql-v21';
+const CACHE_NAME = 'codequet-sql-v22';
 const APP_FILES = [
   './', './index.html', './styles.css', './app.js', './lessons.js',
   './assets/codequet/splash-blue.jpg', './assets/codequet/quet-banner.png', './assets/codequet/quet-head.jpg',
