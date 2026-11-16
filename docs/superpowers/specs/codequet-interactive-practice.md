@@ -16,6 +16,7 @@ Las grabaciones muestran preguntas de opción múltiple con un ejemplo de códig
 - Cada pieza colocada se puede retirar; hay progreso visible, botón para deshacer/reiniciar y pistas de Quet en dos niveles.
 - La respuesta completa y el análisis línea por línea aparecen solo después de completar el ejercicio. Los intentos incorrectos indican qué revisar sin perder vidas.
 - Los proyectos guiados se conservan en la ruta de portafolio y sus retos usan el mismo constructor paso a paso, sin ofertas de pago.
+- El proyecto integrador se presenta como una aventura visual con cuatro hitos, progreso guardado y acción para continuar; Quet explica cada etapa mientras el camino de lecciones y los exámenes siguen disponibles.
 - Los controles funcionan en pantalla táctil, teclado y lector de pantalla; las piezas se ajustan a teléfonos.
 
 ## Límites

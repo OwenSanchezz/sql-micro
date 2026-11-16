@@ -195,6 +195,7 @@ function prepareChallengeTiles(step){
   for(let i=challengeTileOrder.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[challengeTileOrder[i],challengeTileOrder[j]]=[challengeTileOrder[j],challengeTileOrder[i]];}
 }
 function challengeCodeFilename(courseId){return ({sql:'consulta.sql',python:'script.py',java:'Main.java',linux:'terminal',docker:'compose.yaml','network-cloud':'diagnostico-red.txt','portfolio-lab':'proyecto-portafolio.md',web:'index.html',postgres:'consulta.sql'})[courseId]||'codigo.txt';}
+function projectCoachMessage(lessonId){return ({'lab-scope':'Primero vamos a definir algo que puedas construir en tu computadora, sin rentar servidores ni gastar en nube. Al final tendrás un laboratorio que podrás explicar.','lab-compose':'Ahora armamos el entorno reproducible: PostgreSQL en Docker, datos persistentes y credenciales fuera del repositorio.','lab-schema':'El laboratorio necesita datos de ejemplo. Vamos a relacionar productos con categorías usando claves, como en una base de trabajo real.','lab-query':'Con la base lista, consultaremos varias tablas y resumiremos resultados para demostrar cómo respondes preguntas del negocio.','lab-backup':'Un proyecto de infraestructura también debe poder recuperarse. Prepararemos un respaldo con fecha y configuración segura.','lab-backup-cron':'Después automatizamos la tarea. Primero comprobamos que el script funciona manualmente y luego revisamos su registro.','lab-restore':'Un archivo de respaldo no basta: vamos a restaurarlo en otra base y revisar que los datos estén ahí.','lab-readme':'Ahora dejamos instrucciones para que otra persona pueda levantar y comprobar el laboratorio desde cero.','lab-interview':'Cerramos preparando cómo presentar las decisiones, las pruebas y los límites del proyecto con honestidad.'})[lessonId]||'Seguimos construyendo el proyecto en pasos pequeños. Quet te explica cada decisión y cómo comprobarla.';}
 
 let mode = 'home';
 let lessonIndex = 0;
@@ -304,6 +305,11 @@ function renderSplash() {
 
 function renderPractice() {
   mode='practice';topbar.hidden=true;renderBottomNav('practicar');
+  const projectLessons=course.id==='portfolio-lab'?lessons.filter(lesson=>lesson.courseId===course.id):[];
+  const projectDone=projectLessons.filter(lesson=>isComplete(lesson.id)).length;
+  const nextProjectIndex=Math.max(0,projectLessons.findIndex(lesson=>!isComplete(lesson.id)));
+  const nextProject=projectLessons[nextProjectIndex];
+  const projectJourney=projectLessons.length?`<section class="guided-project-card"><div class="project-card-copy"><span class="eyebrow">PROYECTO GUIADO · ${projectDone}/${projectLessons.length} ETAPAS</span><h2>Construye tu laboratorio de datos</h2><p>Quet te acompaña desde la primera configuración hasta un respaldo restaurado y listo para explicar en una entrevista.</p><div class="project-stage-map" aria-label="Etapas del proyecto"><span class="${projectDone>=1?'stage-done':''}"><b>01</b>Preparar</span><i></i><span class="${projectDone>=2?'stage-done':''}"><b>02</b>Conectar</span><i></i><span class="${projectDone>=5?'stage-done':''}"><b>03</b>Respaldar</span><i></i><span class="${projectDone===projectLessons.length?'stage-done':''}"><b>04</b>Presentar</span></div><div class="project-progress"><span style="width:${Math.round(projectDone/projectLessons.length*100)}%"></span></div><button class="primary" id="continue-project">${projectDone===projectLessons.length?'Repasar el proyecto':'Continuar con Quet'}</button></div><div class="project-preview" aria-hidden="true"><div class="preview-window"><div class="preview-window-top"><i></i><i></i><i></i><b>laboratorio-local</b></div><div class="preview-service"><span>▣</span><div><b>PostgreSQL</b><small>datos persistentes</small></div><strong>5433</strong></div><div class="preview-connector"></div><div class="preview-service"><span>▤</span><div><b>Respaldo</b><small>restauración verificada</small></div><strong>✓</strong></div></div><div class="project-quet-badge"><img src="./assets/codequet/quet-head.jpg" alt=""><span>Vamos paso a paso</span></div></div></section>`:'';
   const practiceGroups=units.map((unit,unitIndex)=>{
     const unitLessons=lessons.map((lesson,index)=>({lesson,index})).filter(({lesson})=>lesson.unit===unitIndex);
     const unitCompleted=unitLessons.every(({lesson})=>isComplete(lesson.id));
@@ -315,7 +321,7 @@ function renderPractice() {
     }).join('');
     return `<section class="unit-section practice-unit"><div class="unit-heading"><span class="unit-mark">${esc(unit.icon)}</span><span><span class="unit-label">Unidad ${unitIndex+1} · ${unitLessons.filter(({lesson})=>isComplete(lesson.id)).length}/${unitLessons.length} ejercicios</span><strong>${esc(unit.title)}</strong><small>${esc(unit.subtitle)}</small></span></div><div class="lesson-list">${pathNodes}</div><button class="unit-exam ${unitCompleted?'':'locked'}" data-exam="${unitIndex}" ${unitCompleted?'':'disabled'}><span class="exam-quet"><img src="./assets/codequet/quet-head.jpg" alt="Quet"></span><span><small>CODEQUET · ${examPassed?'APROBADO':'EXAMEN DE UNIDAD'}</small><strong>${examPassed?'Repetir examen':'Reto de unidad · 10 preguntas'}</strong></span><b>${examPassed?'✓':unitCompleted?'›':'🔒'}</b></button></section>`;
   }).join('');
-  screen.innerHTML=`<div class="page-head"><div class="brand"><img src="./assets/codequet/quet-head.jpg" alt=""> CODEQUET</div><span class="eyebrow">PRÁCTICA · ${esc(course.name)}</span><h1>Tu camino de aprendizaje.</h1><p>Avanza por las unidades. Toca el círculo disponible para entrar a una lección.</p></div>${course.id==='sql'?`<section class="practice-card"><div class="practice-quet"><img src="./assets/codequet/quet-banner.png" alt="Quet listo para practicar"></div><div><span class="eyebrow">SQL Playground</span><h2>Prueba una consulta</h2><p>Escribe SQL sobre películas, directores, productos y categorías.</p><button class="primary" id="open-playground">Abrir Playground</button></div></section>`:''}<div class="practice-units">${practiceGroups}</div>`;
+  screen.innerHTML=`<div class="page-head"><div class="brand"><img src="./assets/codequet/quet-head.jpg" alt=""> CODEQUET</div><span class="eyebrow">PRÁCTICA · ${esc(course.name)}</span><h1>Tu camino de aprendizaje.</h1><p>Avanza por las unidades. Toca el círculo disponible para entrar a una lección.</p></div>${course.id==='sql'?`<section class="practice-card"><div class="practice-quet"><img src="./assets/codequet/quet-banner.png" alt="Quet listo para practicar"></div><div><span class="eyebrow">SQL Playground</span><h2>Prueba una consulta</h2><p>Escribe SQL sobre películas, directores, productos y categorías.</p><button class="primary" id="open-playground">Abrir Playground</button></div></section>`:''}${projectJourney}<div class="practice-units">${practiceGroups}</div>`;
   if(course.resources?.length){
     const resources=document.createElement('details');
     resources.className='course-resources';
@@ -323,6 +329,7 @@ function renderPractice() {
     screen.querySelector('.practice-units').after(resources);
   }
   document.querySelector('#open-playground')?.addEventListener('click',()=>{playSfx();startPracticeEditor();});
+  screen.querySelector('#continue-project')?.addEventListener('click',()=>{playSfx();startLesson(nextProjectIndex,true);});
   screen.querySelectorAll('[data-practice]').forEach(button=>button.onclick=()=>{playSfx();startLesson(Number(button.dataset.practice),true);});
   screen.querySelectorAll('[data-exam]').forEach(button=>button.onclick=()=>{lessonOriginTab='practicar';startExam(Number(button.dataset.exam));});
 }
@@ -397,6 +404,7 @@ function renderStep() {
       buttonText=challengeState==='success'?'Continuar':'Ejecutar consulta';disabled=false;
     }
   }
+  if(course.id==='portfolio-lab')body=`<aside class="project-coach"><img src="./assets/codequet/quet-head.jpg" alt="Quet"><div><small>Quet te guía · Etapa ${lessonIndex+1} de ${lessons.length}</small><p>${esc(projectCoachMessage(lesson.id))}</p><div class="project-step-progress"><span style="width:${Math.round((lessonIndex+1)/lessons.length*100)}%"></span></div></div></aside>${body}`;
   screen.innerHTML=`<span class="eyebrow">${mode==='exam'?`EXAMEN · ${examQuestion+1}/10`:`${esc(lesson.title)} · ${stepIndex+1}/${lesson.steps.length}`}</span><section class="step-card ${challengeState==='success'?'success':challengeState==='failure'||challengeState==='syntax'?'failure':''}">${body}</section><div class="spacer"></div><div class="bottom-action"><button class="primary" id="action-button" ${disabled?'disabled':''}>${buttonText}</button></div>`;
   screen.querySelector('#quet-help')?.addEventListener('click',openQuetHelp);
   screen.querySelectorAll('[data-option]').forEach(button=>button.addEventListener('click',()=>{selectedOption=Number(button.dataset.option); feedback=''; lockedAnswer=false; renderStep();}));

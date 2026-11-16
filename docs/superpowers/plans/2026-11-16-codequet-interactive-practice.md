@@ -53,3 +53,11 @@
 - [x] Increment the app asset version and service-worker cache so mobile devices fetch the new interaction.
 - [x] Run JavaScript syntax and whitespace checks.
 - [ ] Commit and push the completed update to the existing Pages branch.
+
+### Follow-up: Make the integrator project feel guided
+
+**Files:** Modify `app.js`, `styles.css`, and this spec.
+
+- [x] Add a visual project card to the portfolio route with four milestones, saved completion progress, and a continue action.
+- [x] Add short, stage-specific Quet coaching to portfolio project lessons.
+- [x] Keep the existing unit path, lesson circles, and exams in place.
