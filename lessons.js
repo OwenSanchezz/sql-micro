@@ -1,7 +1,7 @@
 const makeLesson = ([id,title,subtitle,text,code,question,options,answer,prompt,query,hint,orderMatters=false]) => ({
   id,title,subtitle,icon:'✦',lessonNumber:0,steps:[
     {type:'teoria',title,text,code},
-    {type:'quiz',title:'Comprueba lo que sabes',question,options,answer},
+    {type:'quiz',title:'Comprueba lo que sabes',question,options,answer,explanation:hint},
     {type:'reto',title:`Práctica: ${title}`,prompt,query,hint,orderMatters},
   ],
 });

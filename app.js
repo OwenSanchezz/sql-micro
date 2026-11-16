@@ -181,6 +181,7 @@ let lockedAnswer = false;
 let feedback = '';
 let userResult = null;
 let challengeState = '';
+let hintLevel = 0;
 let currentTab = 'aprender';
 let lessonOriginTab = 'aprender';
 let examUnit = 0;
@@ -306,7 +307,7 @@ function renderHome() {
 function startLesson(index,practice=false) {
   lessonOriginTab=practice?'practicar':'aprender';
   lessonIndex=index; stepIndex=0; hearts=5; earned=0; correct=0; selectedOption=null; lockedAnswer=false; feedback=''; userResult=null; challengeState='';
-  window.lastCode=lessons[index].steps[2].query || '';
+  window.lastCode='';
   mode='lesson'; renderStep();
   showLessonEntry({first:!saved.introSeen,practice});
 }
@@ -335,7 +336,7 @@ function updateTopbar() {
 }
 function advance() {
   if (stepIndex+1>=lessons[lessonIndex].steps.length) { if(mode==='exam')advanceExam(); else finishLesson(); return; }
-  stepIndex++; selectedOption=null; lockedAnswer=false; feedback=''; userResult=null; challengeState=''; renderStep();
+  stepIndex++; selectedOption=null; lockedAnswer=false; feedback=''; userResult=null; challengeState='';hintLevel=0; renderStep();
 }
 function renderStep() {
   updateTopbar();
@@ -344,14 +345,14 @@ function renderStep() {
   if (step.type==='teoria') {
     body=`<span class="eyebrow">Lección desde cero · parte ${stepIndex+1} de ${lesson.steps.length}</span><h2>${esc(step.title)}</h2><section class="teaching-section"><span class="teaching-label">Primero, lo básico</span><p>${esc(courseBasics(course.id))}</p></section><section class="teaching-section"><span class="teaching-label">La idea de hoy</span><p>${esc(step.text)}</p></section><section class="teaching-section example-walkthrough"><span class="teaching-label">Ejemplo explicado paso a paso</span>${codeBreakdown(step.code,course.id)}</section><section class="teaching-section"><span class="teaching-label">¿Dónde lo usarás?</span><p>${esc(realWorldUse(course.id))}</p></section><section class="teaching-section pitfalls-section"><span class="teaching-label">Errores comunes en ${esc(step.title)}</span><ul>${coursePitfalls(course.id,step.title).map(item=>`<li>${esc(item)}</li>`).join('')}</ul></section><section class="teaching-checkpoint"><span class="teaching-label">Antes de avanzar, comprueba que puedes</span><p>${esc(lessonCheckpoint(course.id))}</p></section><button class="quet-help-inline" id="quet-help">🦜 ¿Necesitas ayuda? Pregúntale a Quet</button>`;
   } else if (step.type==='quiz') {
-    body=`<span class="eyebrow">Comprueba que entendiste</span><h2>${esc(step.title)}</h2><p class="question">${esc(step.question)}</p><div class="option-list">${step.options.map((option,index)=>{const cls=selectedOption===index?(index===step.answer&&lockedAnswer?'correct':lockedAnswer?'wrong':'selected'):'';return `<button class="option ${cls}" data-option="${index}" ${lockedAnswer?'disabled':''}>${esc(option)}</button>`;}).join('')}</div><div class="feedback ${feedback.startsWith('¡')?'success-message':'error-message'}">${esc(feedback)}</div>${lockedAnswer&&selectedOption===step.answer?`<section class="answer-explanation"><strong>Por qué es correcto</strong><p>${esc(lesson.steps[0].text)}</p>${codeBreakdown(lesson.steps[0].code,course.id)}</section>`:''}<button class="quet-help-inline" id="quet-help">🦜 ¿Necesitas ayuda? Pregúntale a Quet</button>`;
+    body=`<span class="eyebrow">Reto rápido · aprende intentando</span><h2>${esc(step.title)}</h2><p class="question">${esc(step.question)}</p><div class="option-list">${step.options.map((option,index)=>{const cls=selectedOption===index?(index===step.answer&&lockedAnswer?'correct':lockedAnswer?'wrong':'selected'):'';return `<button class="option ${cls}" data-option="${index}" ${lockedAnswer?'disabled':''}>${esc(option)}</button>`;}).join('')}</div><div class="feedback ${feedback.startsWith('¡')?'success-message':'error-message'}">${esc(feedback)}</div>${lockedAnswer&&selectedOption===step.answer?`<section class="answer-explanation"><strong>Por qué es correcto</strong><p>${esc(step.explanation||lesson.steps[0].text)}</p>${codeBreakdown(lesson.steps[0].code,course.id)}</section>`:''}<button class="quet-help-inline" id="quet-help">🦜 ${selectedOption===null?'Pedir una pista':'Repasar la idea'}</button>`;
     buttonText=lockedAnswer&&selectedOption===step.answer?'Continuar':'Comprobar'; disabled=selectedOption===null||lockedAnswer&&selectedOption!==step.answer;
   } else {
     const infraCourses=['linux','postgres','docker','network-cloud','portfolio-lab'];
     const guidedInfra=lessons[lessonIndex].practiceMode==='guided'||infraCourses.includes(course.id);
     const editorLabel=course.id==='sql'?'Tu consulta':guidedInfra?'Tu respuesta de práctica':`Tu código ${course.name}`;
-    const starter=step.query.split('\n').slice(0,1)[0];
-    body=`<span class="eyebrow">Unidad ${lesson.unit+1} · lección ${lesson.lessonNumber} de ${units[lesson.unit].lessons.length}</span><h2>${esc(step.title)}</h2><section class="exercise-brief"><span class="teaching-label">Tu misión</span><p>${esc(step.prompt)}</p><ol><li>Identifica el resultado que pide la misión.</li><li>Usa la idea y el ejemplo explicados en la lección para construir tu respuesta.</li><li>Compruébala; si falla, cambia una parte y prueba de nuevo.</li></ol></section>${guidedInfra?'<p class="practice-note">Simulador guiado: compara tu respuesta; no ejecuta comandos ni crea recursos reales.</p>':''}<button class="quet-help-inline" id="quet-help">🦜 Quet, ayúdame con este reto</button><label class="editor-label" for="sql-input">${editorLabel}</label><div class="code-editor-tools"><button type="button" data-snippet="()">( )</button><button type="button" data-snippet="{}">{ }</button><button type="button" data-snippet="[]">[ ]</button><button type="button" data-snippet="\"\"">" "</button><button type="button" data-starter="true">Empezar ejemplo</button></div><textarea id="sql-input" class="sql-editor" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" aria-label="${editorLabel}">${esc(course.id==='sql'&&!guidedInfra?(window.lastSql||''):(window.lastCode??starter??''))}</textarea>${userResult&&course.id==='sql'&&!guidedInfra?tableHtml(userResult):''}<div class="feedback ${challengeState==='success'?'success-message':challengeState==='failure'||challengeState==='syntax'?'error-message':''}">${esc(feedback)}</div>${challengeState==='failure'?`<section class="hint-box"><strong>Prueba esta pista</strong><p>${esc(step.hint)}</p></section>`:''}${challengeState==='success'?solutionReview(step.query,course.id):''}`;
+    const hints=['Vuelve a leer la misión y localiza la herramienta, dato u objetivo principal; todavía no escribas toda la solución.','Ahora usa esta pista concreta del tema: '+step.hint];
+    body=`<span class="eyebrow">Unidad ${lesson.unit+1} · lección ${lesson.lessonNumber} de ${units[lesson.unit].lessons.length}</span><h2>${esc(step.title)}</h2><section class="exercise-brief"><span class="teaching-label">Tu misión</span><p>${esc(step.prompt)}</p><div class="challenge-progress"><span>Tu turno: resuélvelo paso a paso</span><span>${challengeState==='success'?'¡Completado!':'Inténtalo a tu ritmo'}</span></div></section>${guidedInfra?'<p class="practice-note">Simulador guiado: practica decisiones sin ejecutar comandos ni crear recursos reales.</p>':''}<button class="quet-help-inline" id="quet-help">🦜 Quet, ayúdame con este reto</button><label class="editor-label" for="sql-input">${editorLabel}</label><div class="code-editor-tools"><button type="button" data-snippet="()">( )</button><button type="button" data-snippet="{}">{ }</button><button type="button" data-snippet="[]">[ ]</button><button type="button" data-snippet="\"\"">" "</button><button type="button" data-hint="true">${hintLevel?'Otra pista':'Dame una pista'}</button></div><textarea id="sql-input" class="sql-editor" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" aria-label="${editorLabel}" placeholder="Escribe aquí tu respuesta desde cero…">${esc(course.id==='sql'&&!guidedInfra?(window.lastSql||''):'')}</textarea>${userResult&&course.id==='sql'&&!guidedInfra?tableHtml(userResult):''}<div class="feedback ${challengeState==='success'?'success-message':challengeState==='failure'||challengeState==='syntax'?'error-message':''}">${esc(feedback)}</div>${challengeState==='failure'?`<section class="hint-box"><strong>${hintLevel?'Pista de Quet':'Vuelve a intentarlo'}</strong><p>${esc(hintLevel?hints[Math.min(hintLevel-1,hints.length-1)]:step.hint)}</p></section>`:''}${challengeState==='success'?solutionReview(step.query,course.id):''}`;
     buttonText=challengeState==='success'?'Continuar':guidedInfra?'Comprobar mi respuesta':course.id==='sql'?'Comprobar consulta':'Comprobar mi respuesta'; disabled=false;
   }
   screen.innerHTML=`<span class="eyebrow">${mode==='exam'?`EXAMEN · ${examQuestion+1}/10`:`${esc(lesson.title)} · ${stepIndex+1}/${lesson.steps.length}`}</span><section class="step-card ${challengeState==='success'?'success':challengeState==='failure'||challengeState==='syntax'?'failure':''}">${body}</section><div class="spacer"></div><div class="bottom-action"><button class="primary" id="action-button" ${disabled?'disabled':''}>${buttonText}</button></div>`;
@@ -359,15 +360,15 @@ function renderStep() {
   screen.querySelectorAll('[data-option]').forEach(button=>button.addEventListener('click',()=>{selectedOption=Number(button.dataset.option); feedback=''; lockedAnswer=false; renderStep();}));
   const editor=screen.querySelector('#sql-input'); if(editor) editor.addEventListener('input',()=>{if(course.id==='sql')window.lastSql=editor.value;else window.lastCode=editor.value;});
   screen.querySelectorAll('[data-snippet]').forEach(button=>button.onclick=()=>{if(!editor)return;const value=button.dataset.snippet;const start=editor.selectionStart,end=editor.selectionEnd;editor.setRangeText(value,start,end,'end');editor.dispatchEvent(new Event('input',{bubbles:true}));editor.focus();});
-  screen.querySelector('[data-starter]')?.addEventListener('click',()=>{if(!editor)return;editor.value=step.query;editor.dispatchEvent(new Event('input',{bubbles:true}));editor.focus();});
+  screen.querySelector('[data-hint]')?.addEventListener('click',()=>{hintLevel=Math.min(hintLevel+1,2);challengeState='failure';feedback=hintLevel===1?'Pista 1 de 2: enfócate en el objetivo, no en copiar.':`Pista 2 de 2: ${step.hint}`;renderStep();});
   document.querySelector('#action-button').addEventListener('click',()=>handleAction(step));
 }
 function openQuetHelp() {
   const lesson=lessons[lessonIndex],step=lesson.steps[stepIndex];
-  const answer=step.type==='reto'?step.hint:step.type==='quiz'?`Pista: ${step.options.filter((_,i)=>i!==step.answer).join(' o ')} no responden a la pregunta. Relee la idea clave de ${lesson.title}.`:step.text;
+  const answer='Primero intenta el reto. Quet puede darte pistas graduales para que descubras la respuesta por tu cuenta.';
   const overlay=document.createElement('div');overlay.className='quet-sheet';overlay.innerHTML=`<div class="quet-sheet-backdrop"></div><section class="quet-sheet-panel"><div class="quet-sheet-handle"></div><div class="quet-sheet-title"><img src="./assets/codequet/quet-head.jpg" alt="Quet"><div><span class="eyebrow">AYUDA DEL CURSO · SIN CONEXIÓN</span><h2>Quet te acompaña</h2></div></div><p>${esc(step.type==='reto'?step.prompt:step.type==='quiz'?step.question:step.text)}</p><div class="quet-help-options"><button data-help="hint">Dame una pista</button><button data-help="explain">Explícame el concepto</button><button data-help="answer">Ayúdame con mi respuesta</button></div><div class="quet-answer" id="quet-answer">${esc(step.type==='reto'?answer:'Primero intenta responder; Quet te puede explicar la regla y darte una pista.')}</div><button class="primary" id="close-quet">Volver al ejercicio</button></section>`;
   document.body.append(overlay);overlay.querySelector('.quet-sheet-backdrop').onclick=()=>overlay.remove();overlay.querySelector('#close-quet').onclick=()=>overlay.remove();
-  const hints={hint:step.type==='reto'?step.hint:`Piensa en el objetivo de ${lesson.title} y descarta las opciones que hacen otra cosa.`,explain:step.type==='reto'?`Empieza con el concepto principal: ${step.hint}`:step.type==='quiz'?`Recuerda: ${step.question}`:step.text,answer:`Respuesta sugerida:\n${step.type==='reto'?step.query:step.type==='quiz'?step.options[step.answer]:step.code}`};
+  const hints={hint:step.type==='reto'?`Pista: ${step.hint}`:step.type==='quiz'?`Pista: piensa cuál de las opciones cumple esta función: ${step.explanation||lesson.steps[0].text}`:`Piensa en el objetivo de ${lesson.title} y encuentra qué parte del ejemplo te puede orientar.`,explain:step.type==='reto'?`Empieza por el concepto, no por copiar una respuesta. Divide el reto en pasos pequeños: ${step.hint}`:step.type==='quiz'?`Idea clave: ${step.explanation||lesson.steps[0].text}`:step.text,answer:'Inténtalo primero con la pista. Cuando compruebes tu respuesta, verás una explicación completa del resultado.'};
   overlay.querySelectorAll('[data-help]').forEach(button=>button.onclick=()=>{overlay.querySelector('#quet-answer').textContent=hints[button.dataset.help];playSfx();});
   saved.helpCount=(saved.helpCount||0)+1;persist();playSfx('open');
 }
@@ -403,17 +404,20 @@ function handleAction(step) {
     if(selectedOption===null)return;
     lockedAnswer=true;
     if(selectedOption===step.answer){feedback='¡Correcto! +10 XP';earned+=10;correct++;saved.xp+=10;persist();playSfx('success');}
-    else {feedback='Esa no es. Prueba otra vez.';if(loseHeart())return;lockedAnswer=false;selectedOption=null;}
+    else {feedback=`“${step.options[selectedOption]}” no responde a lo que pregunta la lección. ${step.explanation||'Revisa la idea clave y compara qué hace cada opción.'}`;if(loseHeart())return;lockedAnswer=false;selectedOption=null;}
     renderStep();return;
   }
   if(challengeState==='success'){window.lastSql='';advance();return;}
   if(course.id!=='sql'||lessons[lessonIndex].practiceMode==='guided'){
     const entered=screen.querySelector('#sql-input')?.value.trim()||'';
-    if(!entered){feedback='Escribe una respuesta o toca “Empezar ejemplo” para explorar el código.';challengeState='failure';renderStep();return;}
+    if(!entered){feedback='Escribe tu primer intento o pide una pista a Quet.';challengeState='failure';if(hintLevel===0)hintLevel=1;renderStep();return;}
     const normalize=value=>String(value).replace(/\s+/g,'').replace(/;+/g,';').toLowerCase();
+    const keyTokens=step.query.toLowerCase().match(/[a-z0-9_./:-]+/g)||[];
+    const meaningful=keyTokens.filter(token=>token.length>2&&!['the','and','with','from','into','para','que','una','por','los','las','del'].includes(token));
+    const matched=meaningful.filter(token=>normalize(entered).includes(normalize(token))).length;
     const equivalent=normalize(entered)===normalize(step.query);
-    if(equivalent){challengeState='success';feedback='✓ ¡Tu ejemplo coincide con el reto! +20 XP';earned+=20;correct++;saved.xp+=20;persist();playSfx('success');}
-    else{challengeState='failure';feedback='Todavía no coincide con el ejemplo esperado. Usa la pista de Quet o ajusta tu código.';if(loseHeart())return;}
+    if(equivalent||matched>=Math.max(1,Math.ceil(meaningful.length*0.55))){challengeState='success';feedback=equivalent?'✓ ¡Lo resolviste! +20 XP':'✓ ¡Buena solución! Captaste las partes clave del reto. +20 XP';earned+=20;correct++;saved.xp+=20;persist();playSfx('success');}
+    else{challengeState='failure';const missing=meaningful.filter(token=>!normalize(entered).includes(normalize(token)));feedback=matched?`Vas avanzando. Revisa estas partes que faltan: ${missing.slice(0,3).join(', ')||'la estructura o el orden'}.`:'Aún no coincide. Identifica primero la herramienta o estructura principal y vuelve a intentarlo.';if(hintLevel===0)hintLevel=1;if(loseHeart())return;}
     renderStep();return;
   }
   const sql=screen.querySelector('#sql-input')?.value || '';
