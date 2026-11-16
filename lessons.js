@@ -1,7 +1,7 @@
 const makeLesson = ([id,title,subtitle,text,code,question,options,answer,prompt,query,hint,orderMatters=false]) => ({
   id,title,subtitle,icon:'✦',lessonNumber:0,steps:[
     {type:'teoria',title,text,code},
-    {type:'quiz',title:'Comprueba lo que sabes',question,options,answer,explanation:hint},
+    {type:'quiz',title:'Comprueba lo que sabes',question,options,answer,explanation:hint,code},
     {type:'reto',title:`Práctica: ${title}`,prompt,query,hint,orderMatters},
   ],
 });
@@ -60,7 +60,7 @@ export const courses = [
     units:[
       {title:'Tu primer programa',subtitle:'Variables, texto y números',icon:'01',lessons:[
         ['py-print','Hola, Quet','Muestra tu primer mensaje','print() muestra un valor en la pantalla. El texto se escribe entre comillas.','print("¡Hola, Quet!")','¿Qué función muestra texto?',['show()','print()','write()'],1,'Muestra el mensaje Hola, mundo.','print("Hola, mundo")','Usa print y encierra el texto entre comillas.'],
-        ['py-variables','Variables','Guarda datos con nombres','Una variable da un nombre a un valor para poder reutilizarlo.','nombre = "Luna"\nprint(nombre)','¿Qué guarda una variable?',['Un valor con un nombre','Solo números','Una pantalla'],0,'Guarda Quet en mascota y muestra la variable.','mascota = "Quet"\nprint(mascota)','Asigna el texto a mascota y después imprímelo.'],
+        ['py-variables','Variables','Guarda y actualiza datos','Una variable guarda un valor asociado a un nombre. Si vuelves a asignarle algo, el valor actual se reemplaza; no conserva automáticamente los valores anteriores.','actividad = "Pasear al perro"\nactividad = "Jugar futbol"\nprint(actividad)','¿Qué muestra print después de las dos asignaciones?',['Pasear al perro','Jugar futbol','Las dos actividades'],1,'Guarda un estado inicial en estado, actualízalo a "Estudiar Python" y muestra el valor actual.','estado = "Pasear al perro"\nestado = "Estudiar Python"\nprint(estado)','La segunda asignación reemplaza el valor anterior. print muestra el valor más reciente.'],
         ['py-types','Texto y números','Distingue tipos de datos','Las cadenas guardan texto; los enteros y decimales guardan números.','nombre = "Quet"\nedad = 3','¿Qué tipo representa "hola"?',['Cadena de texto','Booleano','Lista'],0,'Guarda el entero 7 en nivel y muéstralo.','nivel = 7\nprint(nivel)','Asigna el número 7 sin comillas.'],
         ['py-input','Entrada y salida','Pregunta y responde','input() recibe texto escrito por la persona; print() muestra una respuesta.','nombre = input("¿Cómo te llamas? ")\nprint(nombre)','¿Qué función recibe texto del usuario?',['print()','input()','int()'],1,'Pregunta tu color favorito y muestra la respuesta.','color = input("Color favorito: ")\nprint(color)','Guarda input en color y usa print.'],
       ]},
