@@ -212,6 +212,8 @@ let challengeTokenKey = '';
 let challengeTokens = [];
 let challengeTileOrder = [];
 let challengeSelection = [];
+let activeTileDrag = null;
+let tileDragHandled = false;
 let currentTab = 'aprender';
 let lessonOriginTab = 'aprender';
 let examUnit = 0;
@@ -382,13 +384,12 @@ function renderStep() {
     buttonText=lockedAnswer&&selectedOption===step.answer?'Continuar':'Comprobar'; disabled=selectedOption===null||lockedAnswer&&selectedOption!==step.answer;
   } else {
     if(useTileChallenge){
-      const assembled=challengeSelection.map(id=>challengeTokens[id]?.full||'').join('');
       const selected=new Set(challengeSelection);
       const remaining=challengeTileOrder.filter(id=>!selected.has(id));
-      const tray=challengeSelection.map((id,index)=>`<button type="button" class="assembled-tile" data-remove-tile="${index}" aria-label="Quitar ${esc(challengeTokens[id].display)}">${esc(challengeTokens[id].display)}</button>`).join('');
+      const tray=challengeSelection.map((id,index)=>`<button type="button" class="assembled-tile" data-remove-tile="${index}" aria-label="Quitar ${esc(challengeTokens[id].display)}">${esc(challengeTokens[id].full)}</button>`).join('');
       const bank=remaining.map(id=>`<button type="button" class="code-tile" data-tile="${id}">${esc(challengeTokens[id].display)}</button>`).join('');
       const hintText=hintLevel===1?'Pista 1: encuentra primero la herramienta o la palabra que inicia la instrucción.':hintLevel>=2?`Pista 2: ${step.hint}`:'';
-      body=`<span class="eyebrow">Unidad ${lesson.unit+1} · práctica interactiva</span><h2>${esc(step.title)}</h2><section class="exercise-brief"><span class="teaching-label">Tu misión</span><p>${esc(step.prompt)}</p></section>${guidedInfra?'<p class="practice-note">Laboratorio guiado: practica las decisiones y el orden. No ejecuta comandos ni crea recursos reales.</p>':''}<section class="code-workbench"><div class="workbench-title"><span class="file-dot" aria-hidden="true">●</span><span>${esc(challengeCodeFilename(course.id))}</span><span class="workbench-counter" aria-live="polite">${challengeSelection.length}/${challengeTokens.length} piezas</span></div><div class="assembly-label">Toca las piezas para construir tu respuesta</div><div class="assembly-tray ${challengeSelection.length?'has-pieces':''}" aria-label="Tu código armado"><pre><code>${esc(assembled)}</code></pre>${challengeSelection.length<challengeTokens.length?'<span class="insertion-cursor" aria-hidden="true"></span>':''}</div><div class="assembly-tools"><button type="button" data-undo-tile ${challengeSelection.length?'':'disabled'}>Deshacer</button><button type="button" data-reset-tiles ${challengeSelection.length?'':'disabled'}>Borrar todo</button></div><div class="tile-bank" aria-label="Piezas de código">${bank||'<span class="tile-bank-complete">Ya colocaste todas las piezas.</span>'}</div></section><button class="quet-help-inline" id="quet-help">🦜 Quet, dame una pista</button>${hintText?`<section class="hint-box" role="status"><strong>${hintLevel===1?'Pista 1 de 2':'Pista 2 de 2'}</strong><p>${esc(hintText)}</p></section>`:''}<div class="feedback" aria-live="polite">${esc(feedback)}</div>${challengeState==='success'?solutionReview(step.query,course.id):''}`;
+      body=`<span class="eyebrow">Unidad ${lesson.unit+1} · práctica interactiva</span><h2>${esc(step.title)}</h2><section class="exercise-brief"><span class="teaching-label">Tu misión</span><p>${esc(step.prompt)}</p></section>${guidedInfra?'<p class="practice-note">Laboratorio guiado: practica las decisiones y el orden. No ejecuta comandos ni crea recursos reales.</p>':''}<section class="code-workbench"><div class="workbench-title"><span class="file-dot" aria-hidden="true">●</span><span>${esc(challengeCodeFilename(course.id))}</span><span class="workbench-counter" aria-live="polite">${challengeSelection.length}/${challengeTokens.length} piezas</span></div><div class="assembly-label">Arrastra las piezas al código o tócalas para agregarlas. Arrástralas para reordenar.</div><div class="assembly-tray ${challengeSelection.length?'has-pieces':''}" data-assembly-tray aria-label="Tu código armado"><div class="assembly-pieces">${tray||'<span class="assembly-placeholder">Toca o arrastra piezas aquí</span>'}</div>${challengeSelection.length<challengeTokens.length?'<span class="insertion-cursor" aria-hidden="true"></span>':''}</div><div class="assembly-tools"><button type="button" data-undo-tile ${challengeSelection.length?'':'disabled'}>Deshacer</button><button type="button" data-reset-tiles ${challengeSelection.length?'':'disabled'}>Borrar todo</button></div><div class="tile-bank" data-tile-bank aria-label="Piezas de código">${bank||'<span class="tile-bank-complete">Ya colocaste todas las piezas.</span>'}</div></section><button class="quet-help-inline" id="quet-help">🦜 Quet, dame una pista</button>${hintText?`<section class="hint-box" role="status"><strong>${hintLevel===1?'Pista 1 de 2':'Pista 2 de 2'}</strong><p>${esc(hintText)}</p></section>`:''}<div class="feedback" aria-live="polite">${esc(feedback)}</div>${challengeState==='success'?solutionReview(step.query,course.id):''}`;
       buttonText=challengeState==='success'?'Continuar':'Comprobar respuesta';disabled=challengeSelection.length!==challengeTokens.length||challengeTokens.length===0;
     } else {
       const editorLabel='Tu consulta SQL';
@@ -399,8 +400,24 @@ function renderStep() {
   screen.innerHTML=`<span class="eyebrow">${mode==='exam'?`EXAMEN · ${examQuestion+1}/10`:`${esc(lesson.title)} · ${stepIndex+1}/${lesson.steps.length}`}</span><section class="step-card ${challengeState==='success'?'success':challengeState==='failure'||challengeState==='syntax'?'failure':''}">${body}</section><div class="spacer"></div><div class="bottom-action"><button class="primary" id="action-button" ${disabled?'disabled':''}>${buttonText}</button></div>`;
   screen.querySelector('#quet-help')?.addEventListener('click',openQuetHelp);
   screen.querySelectorAll('[data-option]').forEach(button=>button.addEventListener('click',()=>{selectedOption=Number(button.dataset.option); feedback=''; lockedAnswer=false; renderStep();}));
-  screen.querySelectorAll('[data-tile]').forEach(button=>button.addEventListener('click',()=>{challengeSelection.push(Number(button.dataset.tile));challengeState='';feedback='';renderStep();}));
-  screen.querySelectorAll('[data-remove-tile]').forEach(button=>button.addEventListener('click',()=>{challengeSelection.splice(Number(button.dataset.removeTile),1);challengeState='';feedback='';renderStep();}));
+  screen.querySelectorAll('[data-tile]').forEach(button=>button.addEventListener('click',()=>{if(tileDragHandled){tileDragHandled=false;return;}challengeSelection.push(Number(button.dataset.tile));challengeState='';feedback='';renderStep();}));
+  screen.querySelectorAll('[data-remove-tile]').forEach(button=>button.addEventListener('click',()=>{if(tileDragHandled){tileDragHandled=false;return;}challengeSelection.splice(Number(button.dataset.removeTile),1);challengeState='';feedback='';renderStep();}));
+  screen.querySelectorAll('[data-tile],[data-remove-tile]').forEach(button=>{
+    button.addEventListener('pointerdown',event=>{if(event.button!==0)return;const assembled=button.hasAttribute('data-remove-tile');activeTileDrag={id:assembled?challengeSelection[Number(button.dataset.removeTile)]:Number(button.dataset.tile),from:assembled?'assembled':'bank',fromIndex:assembled?Number(button.dataset.removeTile):-1,startX:event.clientX,startY:event.clientY,moved:false};});
+    button.addEventListener('pointermove',event=>{if(!activeTileDrag||activeTileDrag.moved)return;if(Math.hypot(event.clientX-activeTileDrag.startX,event.clientY-activeTileDrag.startY)>9){activeTileDrag.moved=true;button.classList.add('tile-dragging');}});
+    button.addEventListener('pointerup',event=>{if(!activeTileDrag?.moved){activeTileDrag=null;return;}event.preventDefault();const drag=activeTileDrag;activeTileDrag=null;tileDragHandled=true;const target=document.elementFromPoint(event.clientX,event.clientY)?.closest('[data-remove-tile],[data-tile-bank],[data-assembly-tray]');button.classList.remove('tile-dragging');if(!target)return;
+      if(drag.from==='bank'){
+        if(target.hasAttribute('data-remove-tile')){const at=Number(target.dataset.removeTile);challengeSelection.splice(at,0,drag.id);}else if(target.hasAttribute('data-assembly-tray'))challengeSelection.push(drag.id);else return;
+      }else{
+        const from=challengeSelection.indexOf(drag.id);if(from<0)return;
+        if(target.hasAttribute('data-tile-bank'))challengeSelection.splice(from,1);
+        else if(target.hasAttribute('data-remove-tile')){const to=Number(target.dataset.removeTile);challengeSelection.splice(from,1);challengeSelection.splice(from<to?to-1:to,0,drag.id);}
+        else if(target.hasAttribute('data-assembly-tray'))return;
+      }
+      challengeState='';feedback='';renderStep();setTimeout(()=>{tileDragHandled=false;},0);
+    });
+    button.addEventListener('pointercancel',()=>{activeTileDrag=null;button.classList.remove('tile-dragging');});
+  });
   screen.querySelector('[data-undo-tile]')?.addEventListener('click',()=>{challengeSelection.pop();challengeState='';feedback='';renderStep();});
   screen.querySelector('[data-reset-tiles]')?.addEventListener('click',()=>{challengeSelection=[];challengeState='';feedback='';renderStep();});
   const editor=screen.querySelector('#sql-input'); if(editor) editor.addEventListener('input',()=>{if(course.id==='sql')window.lastSql=editor.value;else window.lastCode=editor.value;});
